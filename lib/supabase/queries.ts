@@ -120,6 +120,35 @@ export async function getUnmatchedProducts(): Promise<ProductListItem[]> {
   return (products ?? []).filter((p) => !matched.has(p.id)).map(mapProductRow);
 }
 
+export const alternativeSchema = z.object({
+  product_id: z.string().uuid(),
+  model_name: z.string(),
+  brand_name: z.string(),
+  screen_size_inch: z.number().int().nullable(),
+  segment: segmentSchema.nullable(),
+  panel_type: panelSchema.nullable(),
+  model_year: z.number().int(),
+  sale_price_cents: z.number().int().nullable(),
+  total_stock: z.coerce.number().int(),
+  margin_pct: z.coerce.number().nullable(),
+  margin_diff_pp: z.coerce.number().nullable(),
+  score: z.coerce.number(),
+  is_pinned: z.boolean(),
+  is_successor: z.boolean(),
+});
+export type Alternative = z.infer<typeof alternativeSchema>;
+
+/** Blok D5: top-alternatieven op voorraad voor een product (rol-afhankelijke marge). */
+export async function getAlternatives(productId: string, limit = 3): Promise<Alternative[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('fn_alternatives', {
+    p_product_id: productId,
+    p_limit: limit,
+  });
+  if (error) throw new Error(error.message);
+  return z.array(alternativeSchema).parse(data);
+}
+
 /** Koppel een EPC aan een product (warehouse/admin, afgedwongen door RLS). */
 export async function coupleTag(epc: string, productId: string): Promise<void> {
   const supabase = createClient();
@@ -130,4 +159,24 @@ export async function coupleTag(epc: string, productId: string): Promise<void> {
     if (error.code === '23505') throw new Error('EPC is al gekoppeld');
     throw new Error(error.message);
   }
+}
+
+/** Verplaats een bestaande tag naar een ander model (conflict-oplossing). */
+export async function moveTag(epc: string, productId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('rfid_tags')
+    .update({ product_id: productId, status: 'active', linked_at: new Date().toISOString() })
+    .eq('epc', epc);
+  if (error) throw new Error(error.message);
+}
+
+/** Ontkoppel een tag (bij misscan): product losmaken, status inactief. */
+export async function unlinkTag(epc: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('rfid_tags')
+    .update({ product_id: null, status: 'inactive' })
+    .eq('epc', epc);
+  if (error) throw new Error(error.message);
 }
