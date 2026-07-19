@@ -1,12 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { venditArticleRowSchema } from '@/lib/schemas';
+import { DEFAULT_QUARANTINE_DELTA_PCT, DEFAULT_MARGIN_ALERT_PCT } from '@/lib/pricing/config';
 import type { VenditAdapter } from './types';
 
 // Sync-engine (C3). Draait met de service-role client (omzeilt RLS). Vergelijkt inkoop/verkoop
 // per veld, voert wijzigingen <= drempel door (+ history), parkeert > drempel in quarantaine.
+// Drempels: settings-tabel is leidend, met de config-fallbacks als default.
 
-const DEFAULT_QUARANTINE_DELTA_PCT = 40;
-const DEFAULT_MARGIN_ALERT_PCT = 10;
 const UNMATCHED_BUFFER_MAX = 500;
 
 export interface SyncSummary {

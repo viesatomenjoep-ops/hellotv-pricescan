@@ -91,7 +91,11 @@ function mapProductRow(r: {
 
 /** Zoek producten op merk, modelnaam, modelnummer of EAN. */
 export async function searchProducts(query: string): Promise<ProductListItem[]> {
-  const term = query.trim();
+  // Verwijder tekens die de PostgREST-filtersyntax (of like-wildcards) kunnen breken.
+  const term = query
+    .trim()
+    .replace(/[,()%*\\]/g, ' ')
+    .trim();
   if (term.length < 2) return [];
   const supabase = createClient();
   const { data, error } = await supabase

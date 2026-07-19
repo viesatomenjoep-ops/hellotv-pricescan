@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { getSessionUser } from '@/lib/auth';
 import { searchProducts, type ProductListItem } from '@/lib/supabase/queries';
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -13,6 +14,8 @@ export async function confirmMatchAction(
   articleId: string,
   productId: string,
 ): Promise<ActionResult<null>> {
+  const user = await getSessionUser();
+  if (user?.role !== 'admin') return { ok: false, error: 'Geen rechten' };
   const parsed = ids.safeParse({ articleId, productId });
   if (!parsed.success) return { ok: false, error: 'Ongeldig id' };
   const supabase = createClient();
