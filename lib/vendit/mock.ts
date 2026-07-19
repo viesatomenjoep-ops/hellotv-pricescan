@@ -1,4 +1,5 @@
 import type { VenditAdapter, VenditArticleRow } from './types';
+import { SEED_EANS as PRODUCT_EANS } from '@/lib/catalog/eans';
 
 // Deterministische test-adapter (C1). 30 artikelen:
 //   * 24 gekoppeld aan de seed-product-EANs
@@ -6,33 +7,6 @@ import type { VenditAdapter, VenditArticleRow } from './types';
 //   * 4 met onbekende EAN (ongematcht)
 // Bij de 2e (en latere) aanroep: 3 artikelen met een matige prijswijziging (+10%, binnen 40%)
 // en 1 met een extreme wijziging (+65%, boven 40% -> quarantaine).
-
-const PRODUCT_EANS = [
-  '8806090000011',
-  '8806090000012',
-  '8806090000013',
-  '8806090000014',
-  '8806090000021',
-  '8806090000022',
-  '8806090000023',
-  '8806090000024',
-  '8806090000031',
-  '8806090000032',
-  '8806090000033',
-  '8806090000034',
-  '8806090000041',
-  '8806090000042',
-  '8806090000043',
-  '8806090000044',
-  '8806090000051',
-  '8806090000052',
-  '8806090000053',
-  '8806090000054',
-  '8806090000061',
-  '8806090000062',
-  '8806090000063',
-  '8806090000064',
-];
 
 interface Base {
   venditArticleId: string;

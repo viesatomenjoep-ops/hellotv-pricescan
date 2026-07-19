@@ -5,6 +5,7 @@
  *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... pnpm tsx scripts/seed.ts
  */
 import { createClient } from '@supabase/supabase-js';
+import { SEED_EANS } from '../lib/catalog/eans';
 
 // Zonder env vars valt de seed terug op de lokale Supabase (vaste dev-keys, geen secret).
 const LOCAL_URL = 'http://127.0.0.1:55321';
@@ -392,12 +393,12 @@ async function main() {
   const { data: prodRows, error: pErr } = await db
     .from('products')
     .insert(
-      SPECS.map((s) => ({
+      SPECS.map((s, i) => ({
         brand_id: brandId.get(s.brand)!,
         model_name: s.model_name,
         model_number: s.model_number,
         model_year: s.model_year,
-        ean: s.ean,
+        ean: SEED_EANS[i],
         screen_size_inch: s.size,
         panel_type: s.panel,
         segment: s.segment,
