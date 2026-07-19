@@ -1,18 +1,18 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getUnmatchedModels, type Model } from '@/lib/supabase/queries';
+import { getUnmatchedProducts, type ProductListItem } from '@/lib/supabase/queries';
 
 // Leest live uit Supabase (rol-gated) — nooit statisch prerenderen.
 export const dynamic = 'force-dynamic';
 
 export default async function UnmatchedPage() {
-  let models: Model[] = [];
+  let products: ProductListItem[] = [];
   let error: string | null = null;
   try {
-    models = await getUnmatchedModels();
+    products = await getUnmatchedProducts();
   } catch (e) {
-    error = e instanceof Error ? e.message : 'Kon ongematchte modellen niet laden';
+    error = e instanceof Error ? e.message : 'Kon ongematchte producten niet laden';
   }
 
   return (
@@ -24,7 +24,7 @@ export default async function UnmatchedPage() {
         </Link>
       </div>
       <p className="text-sm text-muted-foreground">
-        2025/2026-modellen zonder gekoppeld Vendit-artikel. Alleen zichtbaar voor beheer.
+        2025/2026-modellen zonder gekoppeld Vendit-artikel. Voorloper van de matching-review (D4).
       </p>
 
       {error && (
@@ -33,7 +33,7 @@ export default async function UnmatchedPage() {
         </Card>
       )}
 
-      {!error && models.length === 0 && (
+      {!error && products.length === 0 && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
             Alles gematcht. 🎉
@@ -41,17 +41,17 @@ export default async function UnmatchedPage() {
         </Card>
       )}
 
-      {models.map((m) => (
-        <Card key={m.id}>
+      {products.map((p) => (
+        <Card key={p.id}>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <div>
-              <CardTitle className="text-base">{m.name}</CardTitle>
+              <CardTitle className="text-base">{p.model_name}</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                {m.brand} · {m.model_code}
-                {m.ean ? ` · EAN ${m.ean}` : ''}
+                {p.brand} · {p.model_number}
+                {p.ean ? ` · EAN ${p.ean}` : ''}
               </p>
             </div>
-            <Badge variant="outline">{m.model_year}</Badge>
+            <Badge variant="outline">{p.model_year}</Badge>
           </CardHeader>
         </Card>
       ))}

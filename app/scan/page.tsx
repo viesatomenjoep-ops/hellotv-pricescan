@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useTransition, type FormEvent } from 'react';
+import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatEuro, formatPct } from '@/lib/pricing/margin';
-import type { Model, ScanResult } from '@/lib/supabase/queries';
+import type { ScanProduct, ScanResult, ProductListItem } from '@/lib/supabase/queries';
 import { scanAction, searchAction, coupleAction } from './actions';
 
 export default function ScanPage() {
-  const [epcInput, setEpcInput] = useState('');
+  const [input, setInput] = useState('');
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -20,13 +20,16 @@ export default function ScanPage() {
     e.preventDefault();
     setError(null);
     setResult(null);
-    const epc = epcInput;
+    const value = input;
     start(async () => {
-      const res = await scanAction(epc);
+      const res = await scanAction(value);
       if (res.ok) setResult(res.data);
       else setError(res.error);
     });
   }
+
+  const showCouple =
+    result && result.result !== 'hit' && result.input_type === 'rfid' && result.epc;
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
@@ -40,27 +43,30 @@ export default function ScanPage() {
       <form onSubmit={onScan} className="flex gap-2">
         <Input
           autoFocus
-          value={epcInput}
-          onChange={(e) => setEpcInput(e.target.value)}
-          placeholder="Scan of typ een EPC…"
-          aria-label="EPC"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Scan een RFID-tag of typ een EAN…"
+          aria-label="EPC of EAN"
           className="font-mono"
         />
-        <Button type="submit" disabled={pending || epcInput.trim() === ''}>
+        <Button type="submit" disabled={pending || input.trim() === ''}>
           {pending ? 'Bezig…' : 'Scan'}
         </Button>
       </form>
 
       {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
-      {result?.matched && <ScanResultCard result={result} />}
+      {result?.result === 'hit' && result.product && (
+        <ResultCard product={result.product} role={result.role} />
+      )}
 
-      {result && !result.matched && (
+      {showCouple && (
         <CouplePanel
-          epc={result.epc}
+          epc={result!.epc!}
+          reason={result!.result}
           onCoupled={() => {
             setResult(null);
-            setEpcInput('');
+            setInput('');
           }}
         />
       )}
@@ -68,60 +74,84 @@ export default function ScanPage() {
   );
 }
 
-function ScanResultCard({ result }: { result: Extract<ScanResult, { matched: true }> }) {
-  const { model, price, role } = result;
-  const showMargin = price?.margin_cents !== undefined;
+function ResultCard({ product, role }: { product: ScanProduct; role: ScanResult['role'] }) {
+  const canSeeMargin = product.margin_cents != null;
+  const staleColor = product.is_stale ? 'text-destructive' : 'text-foreground';
 
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div>
-          <CardTitle>{model.name}</CardTitle>
+          <CardTitle>{product.model_name}</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            {model.brand} · {model.model_code}
+            {product.brand} · {product.model_number}
           </p>
         </div>
-        <div className="flex gap-2">
-          {model.panel_type && <Badge variant="secondary">{model.panel_type}</Badge>}
-          <Badge variant="outline">{model.model_year}</Badge>
+        <div className="flex flex-wrap justify-end gap-2">
+          {product.panel_type && <Badge variant="secondary">{product.panel_type}</Badge>}
+          <Badge variant="outline">{product.model_year}</Badge>
+          {product.status === 'eol' && <Badge variant="destructive">EOL</Badge>}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {!price && (
-          <p className="text-sm text-muted-foreground">
-            Gekoppeld model zonder prijsinformatie (nog geen Vendit-artikel).
-          </p>
-        )}
-        {price && (
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Verkoopprijs">{formatEuro(price.sale_price_cents)}</Row>
-            <Row label="Voorraad">
-              {price.stock_qty} {price.stock_qty === 1 ? 'stuk' : 'stuks'}
-            </Row>
-            <Row label="Excl. btw">{formatEuro(price.sale_price_excl_vat_cents)}</Row>
-            {showMargin ? (
-              <>
-                <Row label="Inkoop">{formatEuro(price.purchase_price_cents!)}</Row>
-                <Row label="Marge">
-                  <span className={price.margin_cents! < 0 ? 'text-destructive' : ''}>
-                    {formatEuro(price.margin_cents!)}
-                    {price.margin_pct != null && ` · ${formatPct(price.margin_pct)}`}
-                  </span>
-                </Row>
-              </>
-            ) : (
-              <Row label="Marge">
-                <span className="text-muted-foreground">verborgen ({role})</span>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Row label="Inkoopprijs">
+            <span className={staleColor}>
+              {product.purchase_price_cents != null
+                ? formatEuro(product.purchase_price_cents)
+                : '—'}
+              {product.is_stale && ' ⚠︎'}
+            </span>
+          </Row>
+          <Row label="Voorraad">
+            <span className={product.total_stock === 0 ? 'text-destructive' : ''}>
+              {product.total_stock} {product.total_stock === 1 ? 'stuk' : 'stuks'}
+            </span>
+          </Row>
+          {role === 'sales' || role === 'admin' ? (
+            <>
+              <Row label="Verkoopprijs">
+                {product.sale_price_cents != null ? formatEuro(product.sale_price_cents) : '—'}
               </Row>
-            )}
-          </dl>
+              <Row label="Marge">
+                {canSeeMargin ? (
+                  <span className={product.margin_cents! < 0 ? 'text-destructive' : ''}>
+                    {formatEuro(product.margin_cents!)}
+                    {product.margin_pct != null && ` · ${formatPct(product.margin_pct / 100)}`}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </Row>
+            </>
+          ) : (
+            <Row label="Marge">
+              <span className="text-muted-foreground">verborgen ({role ?? 'geen rol'})</span>
+            </Row>
+          )}
+        </dl>
+
+        {product.stock_by_location.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            {product.stock_by_location.map((s) => (
+              <span key={s.location_code} className="mr-3">
+                {s.location_name ?? s.location_code}: {s.qty}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {product.status === 'eol' && product.successor_id && (
+          <p className="text-sm">
+            Opvolger beschikbaar — scan of zoek het opvolgermodel voor het verkoopgesprek.
+          </p>
         )}
       </CardContent>
     </Card>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
       <dt className="text-muted-foreground">{label}</dt>
@@ -130,9 +160,17 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function CouplePanel({ epc, onCoupled }: { epc: string; onCoupled: () => void }) {
+function CouplePanel({
+  epc,
+  reason,
+  onCoupled,
+}: {
+  epc: string;
+  reason: string;
+  onCoupled: () => void;
+}) {
   const [query, setQuery] = useState('');
-  const [models, setModels] = useState<Model[]>([]);
+  const [products, setProducts] = useState<ProductListItem[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -141,16 +179,16 @@ function CouplePanel({ epc, onCoupled }: { epc: string; onCoupled: () => void })
     setMsg(null);
     start(async () => {
       const res = await searchAction(query);
-      if (res.ok) setModels(res.data);
+      if (res.ok) setProducts(res.data);
       else setMsg(res.error);
     });
   }
 
-  function onSelect(model: Model) {
+  function onSelect(p: ProductListItem) {
     start(async () => {
-      const res = await coupleAction(epc, model.id);
+      const res = await coupleAction(epc, p.id);
       if (res.ok) {
-        setMsg(`Gekoppeld: ${model.name}`);
+        setMsg(`Gekoppeld: ${p.model_name}`);
         setTimeout(onCoupled, 1200);
       } else {
         setMsg(res.error);
@@ -161,9 +199,11 @@ function CouplePanel({ epc, onCoupled }: { epc: string; onCoupled: () => void })
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Onbekende tag — koppelen</CardTitle>
+        <CardTitle>
+          {reason === 'unlinked' ? 'Tag zonder product' : 'Onbekende tag'} — koppelen
+        </CardTitle>
         <p className="text-sm text-muted-foreground">
-          EPC <span className="font-mono">{epc}</span> hoort nog bij geen model. Kies een model.
+          EPC <span className="font-mono">{epc}</span> — kies het model om te koppelen.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -182,20 +222,20 @@ function CouplePanel({ epc, onCoupled }: { epc: string; onCoupled: () => void })
         {msg && <p className="text-sm font-medium">{msg}</p>}
 
         <ul className="divide-y rounded-md border">
-          {models.map((m) => (
-            <li key={m.id} className="flex items-center justify-between p-3">
+          {products.map((p) => (
+            <li key={p.id} className="flex items-center justify-between p-3">
               <div>
-                <p className="text-sm font-medium">{m.name}</p>
+                <p className="text-sm font-medium">{p.model_name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {m.brand} · {m.model_code} · {m.model_year}
+                  {p.brand} · {p.model_number} · {p.model_year}
                 </p>
               </div>
-              <Button size="sm" onClick={() => onSelect(m)} disabled={pending}>
+              <Button size="sm" onClick={() => onSelect(p)} disabled={pending}>
                 Koppel
               </Button>
             </li>
           ))}
-          {models.length === 0 && (
+          {products.length === 0 && (
             <li className="p-3 text-sm text-muted-foreground">Nog geen resultaten.</li>
           )}
         </ul>

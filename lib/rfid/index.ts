@@ -1,3 +1,3 @@
-// RFID scanning — EPC normalisatie en validatie.
+// RFID scanning — EPC normalisatie. Validatie: zie lib/schemas (epcSchema).
 
-export { normalizeEpc, epcSchema, type Epc } from './epc';
+export { normalizeEpc } from './epc';
