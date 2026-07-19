@@ -1,8 +1,18 @@
+import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
 import { getDashboardData, getMarginByBrand } from '@/lib/supabase/reports';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/stat-card';
 import { MarginBarChart } from '@/components/charts/margin-bar-chart';
+
+const BEHEER = [
+  { href: '/beheer/matching', label: 'Matching-review' },
+  { href: '/beheer/quarantaine', label: 'Quarantaine' },
+  { href: '/beheer/scans', label: 'Scan-log' },
+  { href: '/beheer/import', label: 'Modellen importeren' },
+  { href: '/beheer/ongematcht', label: 'Ongematcht' },
+  { href: '/beheer/instellingen', label: 'Instellingen' },
+];
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +68,23 @@ export default async function DashboardPage() {
           ) : (
             <p className="text-sm text-muted-foreground">Nog geen marge-data.</p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Beheer</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          {BEHEER.map((b) => (
+            <Link
+              key={b.href}
+              href={b.href}
+              className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+            >
+              {b.label}
+            </Link>
+          ))}
         </CardContent>
       </Card>
     </main>

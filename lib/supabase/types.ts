@@ -119,6 +119,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      import_runs: {
+        Row: {
+          error_text: string | null;
+          finished_at: string | null;
+          id: string;
+          invalid_count: number;
+          new_count: number;
+          source: string;
+          started_at: string;
+          status: string;
+          updated_count: number;
+        };
+        Insert: {
+          error_text?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          invalid_count?: number;
+          new_count?: number;
+          source: string;
+          started_at?: string;
+          status?: string;
+          updated_count?: number;
+        };
+        Update: {
+          error_text?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          invalid_count?: number;
+          new_count?: number;
+          source?: string;
+          started_at?: string;
+          status?: string;
+          updated_count?: number;
+        };
+        Relationships: [];
+      };
       price_history: {
         Row: {
           changed_at: string;
