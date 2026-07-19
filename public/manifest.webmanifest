@@ -1,0 +1,13 @@
+{
+  "name": "helloTV PriceScan",
+  "short_name": "PriceScan",
+  "description": "Scannen, prijzen, marges en voorraad voor helloTV",
+  "start_url": "/scan",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#19445B",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

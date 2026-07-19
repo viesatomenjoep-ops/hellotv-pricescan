@@ -46,6 +46,21 @@ select case when count(*) >= 0 then 'PASS' else 'FAIL' end as r,
        'admin kan quarantaine lezen (rows=' || count(*) || ')' as check from price_quarantine;
 reset role;
 
+\echo '================ EXTRA TABELLEN (warehouse) ======'
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', false);
+select case when count(*) = 0 then 'PASS' else 'FAIL' end as r,
+       'warehouse ziet quarantaine NIET (rows=' || count(*) || ')' as check from price_quarantine;
+select case when count(*) > 0 then 'PASS' else 'FAIL' end as r,
+       'warehouse leest settings (drempels) (rows=' || count(*) || ')' as check from settings;
+select case when count(*) > 0 then 'PASS' else 'FAIL' end as r,
+       'warehouse leest voorraad (rows=' || count(*) || ')' as check from stock_levels;
+-- warehouse mag prices NIET schrijven (RLS: geen write policy) -> 0 rijen geraakt
+with upd as (update prices set sale_price_cents = sale_price_cents where true returning 1)
+select case when count(*) = 0 then 'PASS' else 'FAIL' end as r,
+       'warehouse kan prices NIET schrijven (rows=' || count(*) || ')' as check from upd;
+reset role;
+
 \echo '================ ANON (geen sessie) ======'
 set role anon;
 select set_config('request.jwt.claims', '', false);
