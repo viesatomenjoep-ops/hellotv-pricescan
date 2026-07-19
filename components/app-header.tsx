@@ -13,11 +13,14 @@ export async function AppHeader() {
   const user = await getSessionUser();
   if (!user) return null;
 
-  const nav = [
-    { href: '/scan', label: 'Scan' },
-    { href: '/koppelen', label: 'Koppelen' },
-    { href: '/beheer/ongematcht', label: 'Beheer', adminOnly: true },
-  ].filter((n) => !n.adminOnly || user.role === 'admin');
+  const items: Array<{ href: string; label: string; roles: string[] }> = [
+    { href: '/scan', label: 'Scan', roles: ['warehouse', 'sales', 'admin'] },
+    { href: '/koppelen', label: 'Koppelen', roles: ['warehouse', 'admin'] },
+    { href: '/prijzen', label: 'Prijzen', roles: ['sales', 'admin'] },
+    { href: '/dashboard', label: 'Dashboard', roles: ['admin'] },
+    { href: '/beheer/quarantaine', label: 'Beheer', roles: ['admin'] },
+  ];
+  const nav = items.filter((n) => user.role && n.roles.includes(user.role));
 
   return (
     <header

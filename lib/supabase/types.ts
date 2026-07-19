@@ -872,6 +872,7 @@ export type Database = {
       };
     };
     Functions: {
+      approve_quarantine: { Args: { p_id: string }; Returns: undefined };
       calc_sale_excl_cents: {
         Args: { p_incl: boolean; p_sale: number; p_vat: number };
         Returns: number;
@@ -885,11 +886,15 @@ export type Database = {
         Returns: {
           brand_name: string;
           is_pinned: boolean;
+          is_successor: boolean;
+          margin_diff_pp: number;
           margin_pct: number;
           model_name: string;
           model_year: number;
           panel_type: Database['public']['Enums']['panel_type'];
           product_id: string;
+          sale_price_cents: number;
+          score: number;
           screen_size_inch: number;
           segment: Database['public']['Enums']['segment_type'];
           total_stock: number;
@@ -899,6 +904,7 @@ export type Database = {
         Args: { p_ean?: string; p_epc?: string };
         Returns: Json;
       };
+      reject_quarantine: { Args: { p_id: string }; Returns: undefined };
     };
     Enums: {
       match_method: 'ean' | 'sku' | 'manual';

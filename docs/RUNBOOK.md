@@ -21,11 +21,11 @@ pnpm db:seed-users    # admin/sales/warehouse, wachtwoord PriceScan!2026
 
 Inloggen kan met:
 
-| Rol       | E-mail                   | Ziet marge? |
-| --------- | ------------------------ | ----------- |
-| admin     | admin@hellotv.local      | ja          |
-| sales     | sales@hellotv.local      | ja          |
-| warehouse | warehouse@hellotv.local  | nee         |
+| Rol       | E-mail                  | Ziet marge? |
+| --------- | ----------------------- | ----------- |
+| admin     | admin@hellotv.local     | ja          |
+| sales     | sales@hellotv.local     | ja          |
+| warehouse | warehouse@hellotv.local | nee         |
 
 Wachtwoord (alle drie): `PriceScan!2026` — wijzig na eerste login.
 
