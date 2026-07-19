@@ -19,7 +19,8 @@
     "sync:demo": "NODE_OPTIONS='--conditions=react-server' tsx scripts/sync-demo.ts",
     "vendit:dry-run": "tsx scripts/vendit-dry-run.ts",
     "match:report": "NODE_OPTIONS='--conditions=react-server' tsx scripts/match-report.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.0",
@@ -37,6 +38,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

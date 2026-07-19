@@ -46,6 +46,13 @@ Afgedwongen via Supabase **RLS**, niet alleen in de UI:
 
 Marge- en inkoopvelden worden nooit naar een client gestuurd voor rollen die ze niet mogen zien.
 
+## Code-review subagent
+
+Voor een codebase-review: start een subagent **zonder projectcontext** die beoordeelt op
+dode code, dubbele logica, ontbrekende foutafhandeling, type-gaten (`any`, onveilige casts) en
+afwijkingen van deze conventies. Output = genummerd rapport met prioriteit (hoog/middel/laag),
+`bestand:regel`, beschrijving en concrete fix. Fix daarna alle **hoog**-punten.
+
 ## Bron van waarheid
 
 De volledige productspecificatie staat in **[`docs/PRD.md`](docs/PRD.md)** en is leidend bij
