@@ -656,6 +656,7 @@ export type Database = {
           match_confidence: number | null;
           match_method: Database['public']['Enums']['match_method'] | null;
           product_id: string | null;
+          suggested_product_id: string | null;
           updated_at: string;
           vendit_article_id: string;
           vendit_description: string | null;
@@ -667,6 +668,7 @@ export type Database = {
           match_confidence?: number | null;
           match_method?: Database['public']['Enums']['match_method'] | null;
           product_id?: string | null;
+          suggested_product_id?: string | null;
           updated_at?: string;
           vendit_article_id: string;
           vendit_description?: string | null;
@@ -678,6 +680,7 @@ export type Database = {
           match_confidence?: number | null;
           match_method?: Database['public']['Enums']['match_method'] | null;
           product_id?: string | null;
+          suggested_product_id?: string | null;
           updated_at?: string;
           vendit_article_id?: string;
           vendit_description?: string | null;
@@ -701,6 +704,27 @@ export type Database = {
           {
             foreignKeyName: 'vendit_articles_product_id_fkey';
             columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_product_full';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendit_articles_suggested_product_id_fkey';
+            columns: ['suggested_product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendit_articles_suggested_product_id_fkey';
+            columns: ['suggested_product_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_margin_watchlist';
+            referencedColumns: ['product_id'];
+          },
+          {
+            foreignKeyName: 'vendit_articles_suggested_product_id_fkey';
+            columns: ['suggested_product_id'];
             isOneToOne: false;
             referencedRelation: 'v_product_full';
             referencedColumns: ['id'];
@@ -876,6 +900,10 @@ export type Database = {
       calc_sale_excl_cents: {
         Args: { p_incl: boolean; p_sale: number; p_vat: number };
         Returns: number;
+      };
+      confirm_match: {
+        Args: { p_article_id: string; p_product_id: string };
+        Returns: undefined;
       };
       current_user_role: {
         Args: never;

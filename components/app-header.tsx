@@ -16,6 +16,7 @@ export async function AppHeader() {
   const items: Array<{ href: string; label: string; roles: string[] }> = [
     { href: '/scan', label: 'Scan', roles: ['warehouse', 'sales', 'admin'] },
     { href: '/koppelen', label: 'Koppelen', roles: ['warehouse', 'admin'] },
+    { href: '/catalogus', label: 'Catalogus', roles: ['warehouse', 'sales', 'admin'] },
     { href: '/prijzen', label: 'Prijzen', roles: ['sales', 'admin'] },
     { href: '/dashboard', label: 'Dashboard', roles: ['admin'] },
     { href: '/beheer/quarantaine', label: 'Beheer', roles: ['admin'] },

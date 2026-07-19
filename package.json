@@ -18,6 +18,7 @@
     "db:rls-test": "docker exec -i supabase_db_hellotv-pricescan psql -U postgres -d postgres -q < scripts/rls-test.sql",
     "sync:demo": "NODE_OPTIONS='--conditions=react-server' tsx scripts/sync-demo.ts",
     "vendit:dry-run": "tsx scripts/vendit-dry-run.ts",
+    "match:report": "NODE_OPTIONS='--conditions=react-server' tsx scripts/match-report.ts",
     "test": "vitest run"
   },
   "dependencies": {

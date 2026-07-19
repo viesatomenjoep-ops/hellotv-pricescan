@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { runSync } from '@/lib/vendit/run-sync';
 import { MockVenditAdapter } from '@/lib/vendit/mock';
+import { matchProducts } from '@/lib/matching/match-products';
 
 // Sync-endpoint (C4). Beveiligd met Authorization: Bearer CRON_SECRET.
 // Vercel-cron stuurt een GET met deze header; de admin-actie stuurt een POST.
@@ -30,7 +31,8 @@ async function handle(req: NextRequest): Promise<NextResponse> {
 
   // TODO: vervang MockVenditAdapter door VenditRestAdapter zodra de Vendit-config binnen is (C2).
   const summary = await runSync(new MockVenditAdapter());
-  return NextResponse.json(summary);
+  const match = await matchProducts(); // matcher draait na elke sync (D2)
+  return NextResponse.json({ ...summary, match });
 }
 
 export const GET = handle;

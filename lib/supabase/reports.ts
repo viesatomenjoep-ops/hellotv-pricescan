@@ -198,6 +198,45 @@ export async function getMarginByBrand(): Promise<Array<{ brand: string; avgMarg
     .sort((a, b) => b.avgMarginPct - a.avgMarginPct);
 }
 
+export interface MatchQueueItem {
+  id: string;
+  vendit_article_id: string;
+  vendit_ean: string | null;
+  vendit_description: string | null;
+  match_confidence: number | null;
+  suggestedName: string | null;
+  suggestedId: string | null;
+}
+
+export async function getMatchQueue(): Promise<MatchQueueItem[]> {
+  const supabase = createClient();
+  const { data: articles, error } = await supabase
+    .from('vendit_articles')
+    .select(
+      'id, vendit_article_id, vendit_ean, vendit_description, match_confidence, suggested_product_id',
+    )
+    .is('product_id', null)
+    .order('match_confidence', { ascending: false, nullsFirst: false });
+  if (error) throw new Error(error.message);
+
+  const ids = (articles ?? []).map((a) => a.suggested_product_id).filter((x): x is string => !!x);
+  const names = new Map<string, string>();
+  if (ids.length > 0) {
+    const { data: prods } = await supabase.from('products').select('id, model_name').in('id', ids);
+    for (const p of prods ?? []) names.set(p.id, p.model_name);
+  }
+
+  return (articles ?? []).map((a) => ({
+    id: a.id,
+    vendit_article_id: a.vendit_article_id,
+    vendit_ean: a.vendit_ean,
+    vendit_description: a.vendit_description,
+    match_confidence: a.match_confidence,
+    suggestedId: a.suggested_product_id,
+    suggestedName: a.suggested_product_id ? (names.get(a.suggested_product_id) ?? null) : null,
+  }));
+}
+
 export interface SettingRow {
   key: string;
   value: unknown;
