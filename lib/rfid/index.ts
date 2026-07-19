@@ -1,6 +1,3 @@
-// RFID scanning.
-//
-// Placeholder module — no features yet. Tag reading / scan-session logic
-// will live here.
+// RFID scanning — EPC normalisatie en validatie.
 
-export {};
+export { normalizeEpc, epcSchema, type Epc } from './epc';

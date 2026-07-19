@@ -11,12 +11,12 @@ niet terug.
 
 ### Kernmetrieken (v1)
 
-| Metriek | Doel |
-| --- | --- |
-| Scan → volledig resultaat (prijs, marge, alternatieven) | **< 2 s** (p95) |
-| Versheid prijzen en voorraad tijdens winkeltijden | **nooit ouder dan 4 uur** |
-| Prijswijzigingen met delta **> 40%** die live gaan zonder review | **0** |
-| RFID-tags gekoppeld aan precies 1 product | **100%** |
+| Metriek                                                          | Doel                      |
+| ---------------------------------------------------------------- | ------------------------- |
+| Scan → volledig resultaat (prijs, marge, alternatieven)          | **< 2 s** (p95)           |
+| Versheid prijzen en voorraad tijdens winkeltijden                | **nooit ouder dan 4 uur** |
+| Prijswijzigingen met delta **> 40%** die live gaan zonder review | **0**                     |
+| RFID-tags gekoppeld aan precies 1 product                        | **100%**                  |
 
 ## 2. Gebruikers
 
@@ -38,17 +38,20 @@ niet terug.
 ## 4. Featurelijst per blok (MoSCoW)
 
 ### B. Scannen & resultaat
+
 - **Must** RFID-scan (EPC) → productresultaat < 2 s; scan zonder match toont "koppelen".
 - **Must** Resultaatscherm: model, verkoopprijs, marge (rol-afhankelijk), voorraad.
 - **Should** Handmatige fallback: zoeken op model/EAN als tag ontbreekt.
 - **Could** Offline-cache van laatste sync voor slechte wifi op de vloer.
 
 ### C. Prijs & marge
+
 - **Must** Bedragen in centen; marge = verkoopprijs_excl_btw − inkoopprijs; marge% idem.
 - **Must** Btw-behandeling als expliciete config-constante (default 21%, incl.).
 - **Should** Marge-drempel per model/categorie met visuele waarschuwing onder drempel.
 
 ### D. Alternatieven
+
 - **Must** Top-3 alternatieven **op voorraad**, gerangschikt op een **gewogen score** van
   marge-EUR + marge-% (en optioneel voorraaddruk); weging instelbaar.
 - **Must** Klasse-match primair op **schermdiagonaal + paneltype**, aangevuld met
@@ -56,18 +59,21 @@ niet terug.
 - **Should** Uitleg waarom (bv. "+€120 marge, vergelijkbaar formaat/panel").
 
 ### E. Vendit-sync (read-only)
+
 - **Must** Periodieke sync van prijzen, voorraad en verkoop; versheid ≤ 4 u in winkeltijden.
 - **Must** Vercel-cron met `CRON_SECRET`; Zod-validatie op elke Vendit-response.
 - **Should** Sync-statuspagina met laatste run, duur en fouten.
 - **Won't (v1)** Terugschrijven naar Vendit.
 
 ### F. Catalogus & matching
+
 - **Must** Catalogus van alle 2025/2026-modellen; koppeling model ↔ Vendit-artikel.
 - **Must** RFID-tag koppelen aan model in max 3 handelingen; EPC uniek per product.
 - **Must** Overzicht **ongematchte** 2025/2026-modellen.
 - **Could** Voorstellen voor waarschijnlijke matches (fuzzy op naam/EAN).
 
 ### G. Rollen & autorisatie
+
 - **Must** RLS-rollen medewerker / manager / admin (zie CLAUDE.md blok G).
 - **Must** Inkoop- en margevelden worden nooit naar niet-gerechtigde clients gestuurd.
 - **Must** Auth via **SSO** (bestaand helloTV-account, Google/Microsoft).
@@ -75,11 +81,13 @@ niet terug.
 - **Could** Snelle login met **pincode per persoon of VMS-code** op de handheld (na v1).
 
 ### H. Prijshistorie & quarantaine
+
 - **Must** Elke prijswijziging → `price_history`; delta > 40% → quarantaine, niet live.
 - **Must** Review-flow: goedkeuren/afwijzen met wie/wanneer/waarom.
 - **Should** Notificatie (Resend) bij nieuwe quarantaine-items.
 
 ### I. Beheer & monitoring
+
 - **Must** Import van modeljaar-catalogus (2025/2026).
 - **Must** Scanlog (elke scan) en audit-trail op prijs- en koppelacties.
 - **Should** Beheerdashboard: sync-gezondheid, ongematcht, quarantaine, drempel-overtreders.
@@ -91,6 +99,7 @@ Vastgelegd zodat implementatie niet stilletjes een keuze inbakt. "Aanname" = mij
 tot helloTV/Vendit bevestigt (zie §6).
 
 ### Geld & afronding
+
 - Alle bedragen zijn **integer eurocenten**; rekenen in centen, pas bij weergave naar €.
 - Afronding: **round-half-up** op hele centen, **één** afrondstap op het eindbedrag.
 - Btw uit incl.-prijs: `excl = round(incl / (1 + BTW_TARIEF))`. Config: `BTW_TARIEF = 0.21`,
@@ -98,17 +107,20 @@ tot helloTV/Vendit bevestigt (zie §6).
 - **Aanname:** Vendit-**inkoopprijs is excl. btw** (netto). → bevestigen (§6).
 
 ### Marge
+
 - `marge = verkoopprijs_excl_btw − inkoopprijs` (centen).
 - `marge% = marge / verkoopprijs_excl_btw`, getoond op 1 decimaal.
 - Als `verkoopprijs_excl_btw ≤ 0` of inkoop/verkoop ontbreekt → marge en marge% = **onbekend**
   ("—"), nooit 0. Negatieve marge mag en wordt als waarschuwing (rood) getoond.
 
 ### Marge-drempel
+
 - Config als **marge%-ondergrens**: globale default + optionele override per categorie/model
   (meest specifieke wint). Een model is "onder de drempel" als `marge% < drempel` na
   (her)berekening. **Default-waarde = businesskeuze → §6.**
 
 ### Quarantaine & price_history
+
 - Delta t.o.v. de **laatst live prijs** van hetzelfde type: `delta = |nieuw − live| / live`.
   Strikt **> 40%** → quarantaine; anders direct live + `price_history`.
 - Eerste prijs (geen baseline) gaat direct live. Tijdens quarantaine blijft de **laatst
@@ -121,6 +133,7 @@ tot helloTV/Vendit bevestigt (zie §6).
 - Richting van de 40%-regel: **aanname verkoopprijs, beide richtingen** → §6.
 
 ### Alternatieven
+
 - Kandidaten: andere 2025/2026-modellen, **voorraad > 0**, **niet** het gescande model.
 - Klasse: **gelijke schermdiagonaal (exact in inch) + gelijk paneltype**; < 3 resultaten →
   verbreden naar prijssegment (**aanname ±20%** van de verkoopprijs).
@@ -129,8 +142,10 @@ tot helloTV/Vendit bevestigt (zie §6).
 - **Aanname:** merk-overstijgend (beste marge telt, ongeacht merk).
 
 ### Rolmodel (PRD-groepen → RLS-rollen)
+
 Aanname tot definitief model (§6):
-- **magazijn** → `medewerker` + recht *tags koppelen*
+
+- **magazijn** → `medewerker` + recht _tags koppelen_
 - **verkoop** → `medewerker`
 - **inkoop** → `manager` + inkoper-view (marge zichtbaar)
 - **beheer** → `admin`
@@ -138,12 +153,14 @@ Aanname tot definitief model (§6):
 Zichtbaarheid van inkoop/marge volgt CLAUDE.md blok G.
 
 ### EPC & scannen
+
 - EPC opgeslagen als **hex-string, uppercase, zonder scheidingstekens**.
 - Eén EPC = **één fysiek toestel** dat bij **één model** hoort; prijs/marge/voorraad op
   **modelniveau**. Onbekende EPC → koppel-flow (scan → model kiezen → bevestigen = 3 handelingen),
   voor magazijn/beheer. Elke scan gelogd: EPC, tijdstip, gebruiker, resultaat, gekoppeld model.
 
 ### Sync & niet-functioneel
+
 - Cron **elk uur** (ruim binnen 4 u). Tijdzone **Europe/Amsterdam**, valuta **EUR**.
 - Zod valideert elke Vendit-response; ongeldige records worden overgeslagen en gelogd, nooit
   half doorgevoerd. Read-only.

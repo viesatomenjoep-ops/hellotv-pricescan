@@ -1,0 +1,34 @@
+// Marge- en geldberekeningen. Alles in integer eurocenten (PRD §5).
+// De database (RPC scan_lookup) is de bron van waarheid voor getoonde marges; deze helpers
+// bestaan voor client-side weergave en zijn 1-op-1 met de SQL-logica.
+
+/** Verwijder btw uit een incl.-bedrag. Round-half-up op hele centen. */
+export function exclVat(inclCents: number, vatRate: number): number {
+  return Math.round(inclCents / (1 + vatRate));
+}
+
+export interface MarginResult {
+  marginCents: number;
+  marginPct: number | null; // null als verkoop_excl <= 0
+}
+
+/** marge = verkoop_excl_btw − inkoop; marge% = marge / verkoop_excl_btw. */
+export function computeMargin(saleExclCents: number, purchaseCents: number): MarginResult {
+  const marginCents = saleExclCents - purchaseCents;
+  const marginPct = saleExclCents > 0 ? marginCents / saleExclCents : null;
+  return { marginCents, marginPct };
+}
+
+/** Centen → "€ 1.799,00" (nl-NL). */
+export function formatEuro(cents: number): string {
+  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+}
+
+/** Fractie (0,152) → "15,2%". */
+export function formatPct(fraction: number): string {
+  return new Intl.NumberFormat('nl-NL', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(fraction);
+}
