@@ -12,6 +12,9 @@ import { useScanListener } from '@/lib/rfid/use-scan-listener';
 import { classifyScan, type Scan } from '@/lib/rfid/classify';
 import { isWebSerialSupported, startSerialScan } from '@/lib/rfid/serial-adapter';
 import type { ScanData, ScanToestel } from '@/lib/tracker/scan-data';
+import { FiliaalSelect } from '@/components/tracker/filiaal-select';
+import { DealExtras } from '@/components/tracker/deal-extras';
+import { gekozenExtras, type ExtraSelectie } from '@/lib/tracker/extras-catalog';
 import { koppelToestelTagAction } from './actions';
 import { AanbiedingSheet } from './aanbieding-sheet';
 
@@ -43,14 +46,13 @@ export function ScanClient({
   const privacyscherm = useFlag('scan.privacyscherm');
   const combideals = useFlag('scan.combideals');
   const alternatievenAan = useFlag('scan.alternatieven');
-  const centraalAan = useFlag('scan.centraal_magazijn');
   const serviceAan = useFlag('scan.toon_service');
 
   const [selected, setSelected] = useState<ScanToestel | null>(null);
   const [scanning, setScanning] = useState(false);
   const [klantView, setKlantView] = useState(false);
   const [dealPrice, setDealPrice] = useState(0);
-  const [extras, setExtras] = useState<Set<string>>(new Set());
+  const [extraSel, setExtraSel] = useState<ExtraSelectie>({});
   const [filiaal, setFiliaal] = useState(data.filialen[0]?.id ?? '');
   const [sheet, setSheet] = useState(false);
 
@@ -76,7 +78,7 @@ export function ScanClient({
   const kies = useCallback((t: ScanToestel) => {
     setSelected(t);
     setDealPrice(t.ticket_c);
-    setExtras(new Set());
+    setExtraSel({});
     setKlantView(false);
     setSheet(false);
     setPendingEpc(null);
@@ -189,6 +191,8 @@ export function ScanClient({
     [data.toestellen],
   );
 
+  const gekozen = useMemo(() => gekozenExtras(extraSel), [extraSel]);
+
   const calc = useMemo(() => {
     if (!selected) return null;
     const basisMarge = dealPrice - selected.inkoop_c;
@@ -196,12 +200,8 @@ export function ScanClient({
     const speling = dealPrice - selected.min_marge_c;
     const korting =
       selected.ticket_c > 0 ? ((selected.ticket_c - dealPrice) / selected.ticket_c) * 100 : 0;
-    const extraPrijs = data.bijverkoop
-      .filter((b) => extras.has(b.id))
-      .reduce((s, b) => s + b.prijs_c, 0);
-    const extraMarge = data.bijverkoop
-      .filter((b) => extras.has(b.id))
-      .reduce((s, b) => s + b.marge_c, 0);
+    const extraPrijs = gekozen.reduce((s, e) => s + e.prijs_c * e.aantal, 0);
+    const extraMarge = gekozen.reduce((s, e) => s + e.marge_c * e.aantal, 0);
     return {
       basisMarge,
       margePct,
@@ -211,7 +211,7 @@ export function ScanClient({
       totaalPrijs: dealPrice + extraPrijs,
       totaalMarge: basisMarge + extraMarge,
     };
-  }, [selected, dealPrice, extras, data.bijverkoop]);
+  }, [selected, dealPrice, gekozen]);
 
   const alternatieven = useMemo(() => {
     if (!selected) return [];
@@ -229,9 +229,10 @@ export function ScanClient({
     setDealPrice((p) => Math.max(0, p + deltaEuro * 100));
   }
 
-  const geselecteerdeExtras = data.bijverkoop
-    .filter((b) => extras.has(b.id))
-    .map((b) => ({ naam: b.naam, prijs_c: b.prijs_c }));
+  const geselecteerdeExtras = gekozen.map((e) => ({
+    naam: e.aantal > 1 ? `${e.naam} ×${e.aantal}` : e.naam,
+    prijs_c: e.prijs_c * e.aantal,
+  }));
 
   // ── Nog geen toestel gekozen: scan-scherm ──────────────────────────────
   if (!selected) {
@@ -499,34 +500,15 @@ export function ScanClient({
         </CardContent>
       </Card>
 
-      {/* Combideal */}
-      {combideals && data.bijverkoop.length > 0 && (
+      {/* Combideal & service — selecteerbare varianten + aantal */}
+      {combideals && (
         <Card>
-          <CardContent className="space-y-2 p-4">
-            <p className="text-sm font-semibold">Combideal</p>
-            {data.bijverkoop.map((b) => (
-              <label key={b.id} className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={extras.has(b.id)}
-                    onChange={(e) =>
-                      setExtras((prev) => {
-                        const next = new Set(prev);
-                        if (e.target.checked) next.add(b.id);
-                        else next.delete(b.id);
-                        return next;
-                      })
-                    }
-                  />
-                  {b.naam} <span className="text-xs text-muted-foreground">{b.categorie}</span>
-                </span>
-                <span>{formatEuro(b.prijs_c)}</span>
-              </label>
-            ))}
-            {calc && (
+          <CardContent className="space-y-3 p-4">
+            <p className="text-sm font-semibold">Combideal &amp; service</p>
+            <DealExtras selectie={extraSel} onChange={setExtraSel} />
+            {calc && gekozen.length > 0 && (
               <div className="flex justify-between border-t pt-2 text-sm font-semibold">
-                <span>Totaal: {formatEuro(calc.totaalPrijs)}</span>
+                <span>Totaal incl. extra&apos;s: {formatEuro(calc.totaalPrijs)}</span>
                 {!klantView && (
                   <span className={margeTone(0)}>marge {formatEuro(calc.totaalMarge)}</span>
                 )}
@@ -536,41 +518,33 @@ export function ScanClient({
         </Card>
       )}
 
-      {/* Voorraad */}
+      {/* Voorraad — kies filiaal; centraal magazijn altijd zichtbaar */}
       <Card>
-        <CardContent className="space-y-2 p-4 text-sm">
-          <div className="flex items-center justify-between">
+        <CardContent className="space-y-2.5 p-4 text-sm">
+          <div className="flex items-center justify-between gap-2">
             <span className="font-semibold">Voorraad</span>
-            <select
+            <FiliaalSelect
+              filialen={data.filialen}
               value={filiaal}
-              onChange={(e) => setFiliaal(e.target.value)}
-              className="h-10 rounded-md border bg-background px-2 text-sm md:h-8 md:text-xs"
-            >
-              {data.filialen.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.naam}
-                </option>
-              ))}
-            </select>
+              onChange={setFiliaal}
+              includeAll={false}
+              className="w-48"
+            />
           </div>
-          <div className="flex justify-between">
-            <span>Dit filiaal</span>
-            <span className="font-medium">{selected.voorraad[filiaal] ?? 0} stuks</span>
+          <div className="flex items-center justify-between rounded-xl bg-muted/60 px-3 py-2.5">
+            <span className="text-muted-foreground">
+              {data.filialen.find((f) => f.id === filiaal)?.naam ?? 'Filiaal'} · op voorraad
+            </span>
+            <span className="text-lg font-bold tabular-nums">
+              {selected.voorraad[filiaal] ?? 0}
+            </span>
           </div>
-          {centraalAan && (
-            <div className="flex justify-between text-muted-foreground">
-              <span>
-                Centraal magazijn {selected.centraalEta != null && `· ETA ${selected.centraalEta}d`}
-              </span>
-              <span>{selected.centraalAantal} stuks</span>
-            </div>
-          )}
-          <div className="text-xs text-muted-foreground">
-            Andere filialen:{' '}
-            {data.filialen
-              .filter((f) => f.id !== filiaal)
-              .map((f) => `${f.naam} ${selected.voorraad[f.id] ?? 0}`)
-              .join(' · ')}
+          <div className="flex items-center justify-between rounded-xl border px-3 py-2.5">
+            <span className="text-muted-foreground">
+              Centraal magazijn
+              {selected.centraalEta != null && ` · ETA ${selected.centraalEta} d`}
+            </span>
+            <span className="font-semibold tabular-nums">{selected.centraalAantal} stuks</span>
           </div>
         </CardContent>
       </Card>
