@@ -28,6 +28,94 @@ export type Database = {
   };
   public: {
     Tables: {
+      aanbiedingen: {
+        Row: {
+          aangemaakt: string;
+          extras: Json;
+          geldig_tot: string | null;
+          id: string;
+          klant_id: string | null;
+          korting_pct: number | null;
+          prijs_c: number;
+          status: Database['public']['Enums']['aanbieding_status'];
+          toestel_id: number | null;
+          verkoper_id: string | null;
+        };
+        Insert: {
+          aangemaakt?: string;
+          extras?: Json;
+          geldig_tot?: string | null;
+          id?: string;
+          klant_id?: string | null;
+          korting_pct?: number | null;
+          prijs_c: number;
+          status?: Database['public']['Enums']['aanbieding_status'];
+          toestel_id?: number | null;
+          verkoper_id?: string | null;
+        };
+        Update: {
+          aangemaakt?: string;
+          extras?: Json;
+          geldig_tot?: string | null;
+          id?: string;
+          klant_id?: string | null;
+          korting_pct?: number | null;
+          prijs_c?: number;
+          status?: Database['public']['Enums']['aanbieding_status'];
+          toestel_id?: number | null;
+          verkoper_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'aanbiedingen_klant_id_fkey';
+            columns: ['klant_id'];
+            isOneToOne: false;
+            referencedRelation: 'klanten';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'aanbiedingen_toestel_id_fkey';
+            columns: ['toestel_id'];
+            isOneToOne: false;
+            referencedRelation: 'toestellen';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'aanbiedingen_verkoper_id_fkey';
+            columns: ['verkoper_id'];
+            isOneToOne: false;
+            referencedRelation: 'verkopers';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      agenda_items: {
+        Row: {
+          datum: string;
+          id: string;
+          locatie: string | null;
+          tijd: string | null;
+          titel: string;
+          type: Database['public']['Enums']['agenda_type'];
+        };
+        Insert: {
+          datum: string;
+          id?: string;
+          locatie?: string | null;
+          tijd?: string | null;
+          titel: string;
+          type?: Database['public']['Enums']['agenda_type'];
+        };
+        Update: {
+          datum?: string;
+          id?: string;
+          locatie?: string | null;
+          tijd?: string | null;
+          titel?: string;
+          type?: Database['public']['Enums']['agenda_type'];
+        };
+        Relationships: [];
+      };
       alternative_overrides: {
         Row: {
           action: Database['public']['Enums']['override_action'];
@@ -98,6 +186,30 @@ export type Database = {
           },
         ];
       };
+      bijverkoop: {
+        Row: {
+          categorie: string | null;
+          id: string;
+          marge_c: number;
+          naam: string;
+          prijs_c: number;
+        };
+        Insert: {
+          categorie?: string | null;
+          id?: string;
+          marge_c?: number;
+          naam: string;
+          prijs_c?: number;
+        };
+        Update: {
+          categorie?: string | null;
+          id?: string;
+          marge_c?: number;
+          naam?: string;
+          prijs_c?: number;
+        };
+        Relationships: [];
+      };
       brands: {
         Row: {
           created_at: string;
@@ -116,6 +228,77 @@ export type Database = {
           id?: string;
           name?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      centraal_magazijn: {
+        Row: {
+          aantal: number;
+          eta_dagen: number | null;
+          toestel_id: number;
+        };
+        Insert: {
+          aantal?: number;
+          eta_dagen?: number | null;
+          toestel_id: number;
+        };
+        Update: {
+          aantal?: number;
+          eta_dagen?: number | null;
+          toestel_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'centraal_magazijn_toestel_id_fkey';
+            columns: ['toestel_id'];
+            isOneToOne: true;
+            referencedRelation: 'toestellen';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      feature_flags: {
+        Row: {
+          beschrijving: string | null;
+          enabled: boolean;
+          key: string;
+          rol_scope: string | null;
+        };
+        Insert: {
+          beschrijving?: string | null;
+          enabled?: boolean;
+          key: string;
+          rol_scope?: string | null;
+        };
+        Update: {
+          beschrijving?: string | null;
+          enabled?: boolean;
+          key?: string;
+          rol_scope?: string | null;
+        };
+        Relationships: [];
+      };
+      filialen: {
+        Row: {
+          id: string;
+          lat: number | null;
+          lng: number | null;
+          naam: string;
+          plaats: string | null;
+        };
+        Insert: {
+          id: string;
+          lat?: number | null;
+          lng?: number | null;
+          naam: string;
+          plaats?: string | null;
+        };
+        Update: {
+          id?: string;
+          lat?: number | null;
+          lng?: number | null;
+          naam?: string;
+          plaats?: string | null;
         };
         Relationships: [];
       };
@@ -152,6 +335,78 @@ export type Database = {
           started_at?: string;
           status?: string;
           updated_count?: number;
+        };
+        Relationships: [];
+      };
+      integraties: {
+        Row: {
+          config_json: Json;
+          id: string;
+          soort: string;
+          status: string;
+        };
+        Insert: {
+          config_json?: Json;
+          id?: string;
+          soort: string;
+          status?: string;
+        };
+        Update: {
+          config_json?: Json;
+          id?: string;
+          soort?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      klanten: {
+        Row: {
+          email: string | null;
+          id: string;
+          naam: string;
+          prijsfactor: number;
+          segment: string | null;
+          telefoon: string | null;
+        };
+        Insert: {
+          email?: string | null;
+          id?: string;
+          naam: string;
+          prijsfactor?: number;
+          segment?: string | null;
+          telefoon?: string | null;
+        };
+        Update: {
+          email?: string | null;
+          id?: string;
+          naam?: string;
+          prijsfactor?: number;
+          segment?: string | null;
+          telefoon?: string | null;
+        };
+        Relationships: [];
+      };
+      notificaties: {
+        Row: {
+          gelezen: boolean;
+          id: string;
+          tekst: string;
+          tijd: string;
+          type: Database['public']['Enums']['notificatie_type'];
+        };
+        Insert: {
+          gelezen?: boolean;
+          id?: string;
+          tekst: string;
+          tijd?: string;
+          type: Database['public']['Enums']['notificatie_type'];
+        };
+        Update: {
+          gelezen?: boolean;
+          id?: string;
+          tekst?: string;
+          tijd?: string;
+          type?: Database['public']['Enums']['notificatie_type'];
         };
         Relationships: [];
       };
@@ -685,6 +940,110 @@ export type Database = {
         };
         Relationships: [];
       };
+      taken: {
+        Row: {
+          aangemaakt: string;
+          id: string;
+          persoon_id: string | null;
+          status: Database['public']['Enums']['taak_status'];
+          titel: string;
+        };
+        Insert: {
+          aangemaakt?: string;
+          id?: string;
+          persoon_id?: string | null;
+          status?: Database['public']['Enums']['taak_status'];
+          titel: string;
+        };
+        Update: {
+          aangemaakt?: string;
+          id?: string;
+          persoon_id?: string | null;
+          status?: Database['public']['Enums']['taak_status'];
+          titel?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'taken_persoon_id_fkey';
+            columns: ['persoon_id'];
+            isOneToOne: false;
+            referencedRelation: 'verkopers';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      targets: {
+        Row: {
+          id: string;
+          marge_doel_pct: number | null;
+          marge_pct: number | null;
+          omzet_c: number;
+          omzet_doel_c: number;
+          periode: string;
+        };
+        Insert: {
+          id?: string;
+          marge_doel_pct?: number | null;
+          marge_pct?: number | null;
+          omzet_c?: number;
+          omzet_doel_c?: number;
+          periode: string;
+        };
+        Update: {
+          id?: string;
+          marge_doel_pct?: number | null;
+          marge_pct?: number | null;
+          omzet_c?: number;
+          omzet_doel_c?: number;
+          periode?: string;
+        };
+        Relationships: [];
+      };
+      toestellen: {
+        Row: {
+          ean: string | null;
+          id: number;
+          inch: number | null;
+          inkoop_c: number;
+          klasse: Database['public']['Enums']['toestel_klasse'] | null;
+          merk: string;
+          min_marge_c: number;
+          model: string;
+          specs: string | null;
+          ticket_c: number;
+          type_nr: string;
+          verkoopsnelheid: number | null;
+        };
+        Insert: {
+          ean?: string | null;
+          id: number;
+          inch?: number | null;
+          inkoop_c?: number;
+          klasse?: Database['public']['Enums']['toestel_klasse'] | null;
+          merk: string;
+          min_marge_c?: number;
+          model: string;
+          specs?: string | null;
+          ticket_c?: number;
+          type_nr: string;
+          verkoopsnelheid?: number | null;
+        };
+        Update: {
+          ean?: string | null;
+          id?: number;
+          inch?: number | null;
+          inkoop_c?: number;
+          klasse?: Database['public']['Enums']['toestel_klasse'] | null;
+          merk?: string;
+          min_marge_c?: number;
+          model?: string;
+          specs?: string | null;
+          ticket_c?: number;
+          type_nr?: string;
+          verkoopsnelheid?: number | null;
+        };
+        Relationships: [];
+      };
       vendit_articles: {
         Row: {
           created_at: string;
@@ -763,6 +1122,187 @@ export type Database = {
             columns: ['suggested_product_id'];
             isOneToOne: false;
             referencedRelation: 'v_product_full';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      verkoop_events: {
+        Row: {
+          datum: string;
+          id: string;
+          marge_c: number;
+          toestel_id: number | null;
+        };
+        Insert: {
+          datum?: string;
+          id?: string;
+          marge_c?: number;
+          toestel_id?: number | null;
+        };
+        Update: {
+          datum?: string;
+          id?: string;
+          marge_c?: number;
+          toestel_id?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'verkoop_events_toestel_id_fkey';
+            columns: ['toestel_id'];
+            isOneToOne: false;
+            referencedRelation: 'toestellen';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      verkopen: {
+        Row: {
+          aangemaakt: string;
+          id: string;
+          klant: string | null;
+          model: string | null;
+          status: Database['public']['Enums']['verkoop_status'];
+          toestel_id: number | null;
+          type_nr: string | null;
+          verkoper_id: string | null;
+          waarde_c: number;
+        };
+        Insert: {
+          aangemaakt?: string;
+          id?: string;
+          klant?: string | null;
+          model?: string | null;
+          status?: Database['public']['Enums']['verkoop_status'];
+          toestel_id?: number | null;
+          type_nr?: string | null;
+          verkoper_id?: string | null;
+          waarde_c?: number;
+        };
+        Update: {
+          aangemaakt?: string;
+          id?: string;
+          klant?: string | null;
+          model?: string | null;
+          status?: Database['public']['Enums']['verkoop_status'];
+          toestel_id?: number | null;
+          type_nr?: string | null;
+          verkoper_id?: string | null;
+          waarde_c?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'verkopen_toestel_id_fkey';
+            columns: ['toestel_id'];
+            isOneToOne: false;
+            referencedRelation: 'toestellen';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'verkopen_verkoper_id_fkey';
+            columns: ['verkoper_id'];
+            isOneToOne: false;
+            referencedRelation: 'verkopers';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      verkopers: {
+        Row: {
+          auth_user_id: string | null;
+          email: string | null;
+          filiaal_id: string | null;
+          id: string;
+          kleur: string | null;
+          naam: string;
+          rol: Database['public']['Enums']['verkoper_rol'];
+        };
+        Insert: {
+          auth_user_id?: string | null;
+          email?: string | null;
+          filiaal_id?: string | null;
+          id: string;
+          kleur?: string | null;
+          naam: string;
+          rol?: Database['public']['Enums']['verkoper_rol'];
+        };
+        Update: {
+          auth_user_id?: string | null;
+          email?: string | null;
+          filiaal_id?: string | null;
+          id?: string;
+          kleur?: string | null;
+          naam?: string;
+          rol?: Database['public']['Enums']['verkoper_rol'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'verkopers_filiaal_id_fkey';
+            columns: ['filiaal_id'];
+            isOneToOne: false;
+            referencedRelation: 'filialen';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      vms_sync_log: {
+        Row: {
+          aantal_bijgewerkt: number;
+          afgerond: string | null;
+          gestart: string;
+          id: string;
+          status: string;
+        };
+        Insert: {
+          aantal_bijgewerkt?: number;
+          afgerond?: string | null;
+          gestart?: string;
+          id?: string;
+          status?: string;
+        };
+        Update: {
+          aantal_bijgewerkt?: number;
+          afgerond?: string | null;
+          gestart?: string;
+          id?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      voorraad: {
+        Row: {
+          aantal: number;
+          filiaal_id: string;
+          id: string;
+          toestel_id: number;
+          wijkt_af_vms: boolean;
+        };
+        Insert: {
+          aantal?: number;
+          filiaal_id: string;
+          id?: string;
+          toestel_id: number;
+          wijkt_af_vms?: boolean;
+        };
+        Update: {
+          aantal?: number;
+          filiaal_id?: string;
+          id?: string;
+          toestel_id?: number;
+          wijkt_af_vms?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'voorraad_filiaal_id_fkey';
+            columns: ['filiaal_id'];
+            isOneToOne: false;
+            referencedRelation: 'filialen';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'voorraad_toestel_id_fkey';
+            columns: ['toestel_id'];
+            isOneToOne: false;
+            referencedRelation: 'toestellen';
             referencedColumns: ['id'];
           },
         ];
@@ -971,7 +1511,10 @@ export type Database = {
       reject_quarantine: { Args: { p_id: string }; Returns: undefined };
     };
     Enums: {
+      aanbieding_status: 'concept' | 'verzonden' | 'geaccepteerd';
+      agenda_type: 'activiteit' | 'herinnering';
       match_method: 'ean' | 'sku' | 'manual';
+      notificatie_type: 'voorraad' | 'marge' | 'verkoop' | 'systeem';
       override_action: 'pin' | 'block';
       panel_type: 'LED' | 'QLED' | 'MiniLED' | 'OLED';
       price_field: 'purchase' | 'sale';
@@ -981,8 +1524,12 @@ export type Database = {
       scan_result: 'hit' | 'unknown_tag' | 'unlinked';
       segment_type: 'budget' | 'mid' | 'premium';
       sync_status: 'running' | 'success' | 'failed';
+      taak_status: 'te-doen' | 'bezig' | 'review' | 'klaar';
       tag_status: 'active' | 'inactive' | 'defect';
+      toestel_klasse: 'OLED' | 'QLED' | 'Mini-LED' | 'LED';
       user_role: 'admin' | 'sales' | 'warehouse';
+      verkoop_status: 'lead' | 'offerte' | 'verkocht' | 'geleverd';
+      verkoper_rol: 'verkoper' | 'manager';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1107,7 +1654,10 @@ export const Constants = {
   },
   public: {
     Enums: {
+      aanbieding_status: ['concept', 'verzonden', 'geaccepteerd'],
+      agenda_type: ['activiteit', 'herinnering'],
       match_method: ['ean', 'sku', 'manual'],
+      notificatie_type: ['voorraad', 'marge', 'verkoop', 'systeem'],
       override_action: ['pin', 'block'],
       panel_type: ['LED', 'QLED', 'MiniLED', 'OLED'],
       price_field: ['purchase', 'sale'],
@@ -1117,8 +1667,12 @@ export const Constants = {
       scan_result: ['hit', 'unknown_tag', 'unlinked'],
       segment_type: ['budget', 'mid', 'premium'],
       sync_status: ['running', 'success', 'failed'],
+      taak_status: ['te-doen', 'bezig', 'review', 'klaar'],
       tag_status: ['active', 'inactive', 'defect'],
+      toestel_klasse: ['OLED', 'QLED', 'Mini-LED', 'LED'],
       user_role: ['admin', 'sales', 'warehouse'],
+      verkoop_status: ['lead', 'offerte', 'verkocht', 'geleverd'],
+      verkoper_rol: ['verkoper', 'manager'],
     },
   },
 } as const;

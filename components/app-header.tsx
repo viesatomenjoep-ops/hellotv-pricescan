@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/auth';
 import { SignOutButton } from './sign-out-button';
 
@@ -10,6 +11,10 @@ const ROLE_LABEL: Record<string, string> = {
 
 // App-header — helloTV huisstijl: inkt-zwarte balk, geel Baloo 2-woordmerk. Alleen als ingelogd.
 export async function AppHeader() {
+  // De Sales Tracker (/tracker) heeft z'n eigen shell — daar geen PriceScan-header tonen.
+  const pathname = headers().get('x-pathname') ?? '';
+  if (pathname.startsWith('/tracker')) return null;
+
   const user = await getSessionUser();
   if (!user) return null;
 

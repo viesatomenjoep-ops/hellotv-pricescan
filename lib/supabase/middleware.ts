@@ -7,7 +7,10 @@ import type { Database } from './types';
 const PUBLIC_PREFIXES = ['/login', '/api', '/dev', '/_next', '/favicon'];
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
-  let response = NextResponse.next({ request });
+  // Geef het pad door aan server components (zodat AppHeader zich op /tracker kan verbergen).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', request.nextUrl.pathname);
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +22,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers: requestHeaders } });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );

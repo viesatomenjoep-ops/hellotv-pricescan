@@ -15,6 +15,7 @@
     "db:types": "supabase gen types typescript --local > lib/supabase/types.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed-users": "tsx scripts/seed-users.ts",
+    "db:seed-tracker": "tsx scripts/seed-tracker.ts",
     "db:rls-test": "docker exec -i supabase_db_hellotv-pricescan psql -U postgres -d postgres -q < scripts/rls-test.sql",
     "sync:demo": "NODE_OPTIONS='--conditions=react-server' tsx scripts/sync-demo.ts",
     "vendit:dry-run": "tsx scripts/vendit-dry-run.ts",
