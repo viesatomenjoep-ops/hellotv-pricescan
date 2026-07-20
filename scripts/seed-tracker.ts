@@ -3,6 +3,8 @@
  *   pnpm db:seed-tracker   (valt terug op de lokale Supabase)
  */
 import { createClient } from '@supabase/supabase-js';
+import { buildCatalog } from '../lib/catalog/tv-catalog';
+import { SERIES } from '../lib/catalog/tv-series';
 
 const LOCAL_URL = 'http://127.0.0.1:55321';
 const LOCAL_SERVICE_KEY =
@@ -46,221 +48,23 @@ const VERKOPERS = [
   { id: 'fleur', naam: 'Fleur', kleur: '#B85C00', filiaal_id: 'gro', rol: 'verkoper' },
 ];
 
-// P(id, merk, model, type, inch, klasse, inkoop, ticket, minMarge, snelheid, specs, [voorraad per filiaal])
+// Volledige 2025/2026 Benelux-catalogus (gegenereerd, gedeeld met PriceScan → EAN-brug automatisch).
 type Klasse = 'OLED' | 'QLED' | 'Mini-LED' | 'LED';
-const P = (
-  id: number,
-  merk: string,
-  model: string,
-  type: string,
-  inch: number,
-  klasse: Klasse,
-  inkoop: number,
-  ticket: number,
-  minMarge: number,
-  snelheid: number,
-  specs: string,
-  v: number[],
-) => ({ id, merk, model, type, inch, klasse, inkoop, ticket, minMarge, snelheid, specs, v });
-
-const TOESTELLEN = [
-  P(
-    1,
-    'Samsung',
-    'Samsung QLED Q60D',
-    'QE43Q60D',
-    43,
-    'QLED',
-    349,
-    549,
-    469,
-    7,
-    '4K · Quantum Dot · Tizen · 60Hz',
-    [5, 3, 4, 2, 1, 6],
-  ),
-  P(
-    2,
-    'Samsung',
-    'Samsung OLED S90D',
-    'QE55S90D',
-    55,
-    'OLED',
-    1090,
-    1499,
-    1290,
-    8,
-    '4K · QD-OLED · 144Hz · HDR10+',
-    [3, 2, 1, 4, 0, 2],
-  ),
-  P(
-    3,
-    'Samsung',
-    'Samsung Neo QLED QN90D',
-    'QN65QN90D',
-    65,
-    'Mini-LED',
-    1690,
-    2299,
-    1990,
-    5,
-    '4K · Neo Quantum · 120Hz · Anti-glare',
-    [2, 1, 0, 1, 1, 2],
-  ),
-  P(
-    4,
-    'LG',
-    'LG OLED evo C4',
-    'OLED48C4',
-    48,
-    'OLED',
-    990,
-    1299,
-    1150,
-    9,
-    '4K · α9 AI · 144Hz · Dolby Vision',
-    [4, 5, 3, 2, 2, 3],
-  ),
-  P(
-    5,
-    'LG',
-    'LG OLED evo G4',
-    'OLED65G4',
-    65,
-    'OLED',
-    2290,
-    2999,
-    2650,
-    4,
-    '4K · MLA · 144Hz · Gallery',
-    [1, 1, 1, 0, 0, 1],
-  ),
-  P(
-    6,
-    'LG',
-    'LG QNED80',
-    '55QNED80',
-    55,
-    'QLED',
-    599,
-    849,
-    749,
-    6,
-    '4K · Quantum NanoCell · 60Hz',
-    [3, 4, 2, 3, 1, 2],
-  ),
-  P(
-    7,
-    'Sony',
-    'Sony Bravia 7',
-    'K65XR70',
-    65,
-    'Mini-LED',
-    1490,
-    1999,
-    1750,
-    5,
-    '4K · XR Processor · Mini-LED · Google TV',
-    [2, 1, 1, 2, 0, 1],
-  ),
-  P(
-    8,
-    'Sony',
-    'Sony Bravia 8',
-    'K55XR80',
-    55,
-    'OLED',
-    1390,
-    1899,
-    1650,
-    6,
-    '4K · XR OLED · 120Hz · Acoustic Surface',
-    [2, 2, 1, 1, 1, 2],
-  ),
-  P(
-    9,
-    'Philips',
-    'Philips OLED809 Ambilight',
-    '48OLED809',
-    48,
-    'OLED',
-    990,
-    1349,
-    1190,
-    7,
-    '4K · 3-zijdig Ambilight · P5 AI · 144Hz',
-    [3, 2, 2, 1, 1, 2],
-  ),
-  P(
-    10,
-    'Philips',
-    'Philips The One PUS8909',
-    '50PUS8909',
-    50,
-    'LED',
-    449,
-    649,
-    569,
-    8,
-    '4K · 3-zijdig Ambilight · 120Hz',
-    [6, 5, 4, 3, 2, 4],
-  ),
-  P(
-    11,
-    'TCL',
-    'TCL C805',
-    '75C805',
-    75,
-    'Mini-LED',
-    990,
-    1399,
-    1190,
-    6,
-    '4K · Mini-LED · 144Hz · Google TV',
-    [2, 3, 1, 2, 0, 1],
-  ),
-  P(
-    12,
-    'TCL',
-    'TCL C655',
-    '55C655',
-    55,
-    'QLED',
-    399,
-    599,
-    519,
-    7,
-    '4K · QLED · 60Hz · Onkyo audio',
-    [5, 4, 3, 2, 2, 3],
-  ),
-  P(
-    13,
-    'Samsung',
-    'Samsung The Frame',
-    'QE55LS03D',
-    55,
-    'QLED',
-    990,
-    1399,
-    1250,
-    6,
-    '4K · Matte Display · Art Mode',
-    [2, 2, 1, 1, 1, 1],
-  ),
-  P(
-    14,
-    'Sony',
-    'Sony X75WL',
-    'K43S30',
-    43,
-    'LED',
-    349,
-    499,
-    439,
-    5,
-    '4K · Google TV · 50Hz',
-    [4, 3, 2, 2, 1, 3],
-  ),
-];
+const CAT = buildCatalog(SERIES);
+const TOESTELLEN = CAT.map((item, idx) => ({
+  id: idx + 1,
+  merk: item.merk,
+  model: item.model_name,
+  type: item.model_number,
+  ean: item.ean,
+  inch: item.inch,
+  klasse: item.klasse as Klasse,
+  inkoop_c: item.inkoop_c,
+  ticket_c: item.ticket_c,
+  min_marge_c: item.min_marge_c,
+  snelheid: ((item.inch + idx) % 10) + 1,
+  specs: `${item.panel} · ${item.inch}" · UHD 4K · ${item.jaar}`,
+}));
 
 const KLANTEN = [
   {
@@ -422,15 +226,9 @@ const FLAGS = [
 ] as const;
 
 const c = (euro: number) => Math.round(euro * 100);
-// EAN-brug-demo: de eerste toestellen delen hun EAN met PriceScan-producten (SPECS 0..3),
-// zodat één gekoppelde chip in beide apps herkend wordt. Rest krijgt een eigen gegenereerde EAN.
-const BRUG_EANS: Record<number, string> = {
-  1: '8806090000011',
-  2: '8806090000012',
-  3: '8806090000013',
-  4: '8806090000014',
-};
-const ean = (id: number) => BRUG_EANS[id] ?? '87' + (100000000 + id * 137171).toString().slice(0, 10);
+// EAN-brug is automatisch: toestellen en PriceScan-producten komen uit dezelfde catalogus in
+// dezelfde volgorde, dus toestel[i].ean == product[i].ean. Eén chip → in beide apps herkend.
+const toestelById = new Map(TOESTELLEN.map((t) => [t.id, t]));
 
 async function reset() {
   for (const t of [
@@ -469,12 +267,12 @@ async function main() {
       merk: t.merk,
       model: t.model,
       type_nr: t.type,
-      ean: ean(t.id),
+      ean: t.ean,
       inch: t.inch,
       klasse: t.klasse,
-      inkoop_c: c(t.inkoop),
-      ticket_c: c(t.ticket),
-      min_marge_c: c(t.minMarge),
+      inkoop_c: t.inkoop_c,
+      ticket_c: t.ticket_c,
+      min_marge_c: t.min_marge_c,
       verkoopsnelheid: t.snelheid,
       specs: t.specs,
     })),
@@ -485,7 +283,8 @@ async function main() {
       FILIALEN.map((f, i) => {
         // Nog niet geopende filialen hebben geen voorraad.
         if (f.opent) return { toestel_id: t.id, filiaal_id: f.id, aantal: 0 };
-        const basis = t.v[i % t.v.length]; // demo-patroon cyclisch hergebruiken
+        // Deterministisch: niet elk model in elk filiaal, XL heeft meer.
+        const basis = (t.id * 7 + i * 13) % 6; // 0..5
         const factor = f.type === 'xl' ? 1.5 : 0.8;
         return { toestel_id: t.id, filiaal_id: f.id, aantal: Math.max(0, Math.round(basis * factor)) };
       }),
@@ -513,8 +312,9 @@ async function main() {
     'verkopen',
     VERKOPEN.map((v) => ({
       toestel_id: v.toestel_id,
-      model: v.model,
-      type_nr: v.type_nr,
+      // Model/typenr uit de echte catalogus halen (snapshot bij verkoop).
+      model: toestelById.get(v.toestel_id)?.model ?? v.model,
+      type_nr: toestelById.get(v.toestel_id)?.type ?? v.type_nr,
       klant: v.klant,
       verkoper_id: v.verkoper_id,
       waarde_c: c(v.waarde),
@@ -537,7 +337,7 @@ async function main() {
     TOESTELLEN.flatMap((t) =>
       Array.from({ length: (t.id % 3) + 1 }, () => ({
         toestel_id: t.id,
-        marge_c: c(t.ticket - t.inkoop),
+        marge_c: t.ticket_c - t.inkoop_c,
       })),
     ),
   );
@@ -604,11 +404,10 @@ async function main() {
   }));
   await ins('toestel_tags', demoChips);
 
-  // EAN-brug: spiegel de demo-chips ook naar PriceScan rfid_tags (via het gedeelde EAN),
-  // zodat dezelfde chip meteen in beide apps herkend wordt. Best-effort — slaat over als er
-  // (nog) geen PriceScan-product met die EAN bestaat.
+  // EAN-brug: spiegel de demo-chips ook naar PriceScan rfid_tags via het gedeelde EAN,
+  // zodat dezelfde chip meteen in beide apps herkend wordt. Best-effort.
   for (const chip of demoChips) {
-    const e = BRUG_EANS[chip.toestel_id];
+    const e = toestelById.get(chip.toestel_id)?.ean;
     if (!e) continue;
     const { data: product } = await db.from('products').select('id').eq('ean', e).maybeSingle();
     if (product) {
@@ -625,8 +424,11 @@ async function main() {
 }
 
 async function ins(table: string, rows: unknown[]) {
-  const { error } = await db.from(table).insert(rows as never);
-  if (error) throw new Error(`${table}: ${error.message}`);
+  // In batches i.v.m. de grote catalogus (bv. ~5.700 voorraadregels).
+  for (let i = 0; i < rows.length; i += 500) {
+    const { error } = await db.from(table).insert(rows.slice(i, i + 500) as never);
+    if (error) throw new Error(`${table}: ${error.message}`);
+  }
 }
 
 async function report() {

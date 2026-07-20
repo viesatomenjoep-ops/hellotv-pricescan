@@ -5,7 +5,8 @@
  *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... pnpm tsx scripts/seed.ts
  */
 import { createClient } from '@supabase/supabase-js';
-import { SEED_EANS } from '../lib/catalog/eans';
+import { buildCatalog } from '../lib/catalog/tv-catalog';
+import { SERIES } from '../lib/catalog/tv-series';
 
 // Zonder env vars valt de seed terug op de lokale Supabase (vaste dev-keys, geen secret).
 const LOCAL_URL = 'http://127.0.0.1:55321';
@@ -18,343 +19,21 @@ const db = createClient(url, key, { auth: { persistSession: false } });
 console.log(`Seeden tegen ${url}`);
 
 const VAT = 21;
-const BRANDS = ['Samsung', 'LG', 'Sony', 'Philips', 'TCL', 'Hisense'];
+const BRANDS = ['Samsung', 'LG', 'Sony', 'Philips', 'TCL'];
 
-// Basisprijs (incl. btw, centen) per schermmaat; segment schaalt mee.
-const SIZE_BASE: Record<number, number> = {
-  43: 49900,
-  48: 64900,
-  50: 69900,
-  55: 99900,
-  65: 149900,
-  75: 219900,
-  85: 329900,
+// Volledige 2025/2026 Benelux-catalogus, gegenereerd uit de gescrapete line-ups. Geen Hisense.
+const CAT = buildCatalog(SERIES);
+
+// DB-enum panel_type kent 'MiniLED' (zonder streepje) en geen 'QD-OLED' (→ OLED).
+const PANEL_DB: Record<string, 'LED' | 'QLED' | 'MiniLED' | 'OLED'> = {
+  LED: 'LED',
+  QLED: 'QLED',
+  'Mini-LED': 'MiniLED',
+  OLED: 'OLED',
 };
-const SEG_MULT: Record<string, number> = { budget: 0.8, mid: 1.0, premium: 1.3 };
-const MARGINS = [
-  8, 12, 15, 18, 22, 25, 28, 10, 14, 17, 20, 24, 9, 13, 16, 19, 23, 26, 11, 15, 21, 27, 12, 18,
-];
 
-type Panel = 'LED' | 'QLED' | 'MiniLED' | 'OLED';
-type Segment = 'budget' | 'mid' | 'premium';
-interface Spec {
-  key: string;
-  brand: string;
-  model_name: string;
-  model_number: string;
-  model_year: 2025 | 2026;
-  ean: string;
-  size: number;
-  panel: Panel;
-  segment: Segment;
-  status: 'active' | 'eol';
-  successorKey?: string;
-}
-
-// 24 modellen (4 per merk), gespreid over jaar/maat/segment. 2 EOL met opvolger.
-const SPECS: Spec[] = [
-  // Samsung — 1 EOL (2025) -> opvolger 2026
-  {
-    key: 'sam1',
-    brand: 'Samsung',
-    model_name: 'Samsung Neo QLED 55" QN90F',
-    model_number: 'QN55QN90F',
-    model_year: 2026,
-    ean: '8806090000011',
-    size: 55,
-    panel: 'MiniLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'sam2',
-    brand: 'Samsung',
-    model_name: 'Samsung Crystal UHD 43" DU7100',
-    model_number: 'UE43DU7100',
-    model_year: 2025,
-    ean: '8806090000012',
-    size: 43,
-    panel: 'LED',
-    segment: 'budget',
-    status: 'eol',
-    successorKey: 'sam4',
-  },
-  {
-    key: 'sam3',
-    brand: 'Samsung',
-    model_name: 'Samsung QLED 65" Q80F',
-    model_number: 'QE65Q80F',
-    model_year: 2026,
-    ean: '8806090000013',
-    size: 65,
-    panel: 'QLED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'sam4',
-    brand: 'Samsung',
-    model_name: 'Samsung Crystal UHD 50" DU8000',
-    model_number: 'UE50DU8000',
-    model_year: 2026,
-    ean: '8806090000014',
-    size: 50,
-    panel: 'LED',
-    segment: 'budget',
-    status: 'active',
-  },
-  // LG — 1 EOL (2025) -> opvolger 2026
-  {
-    key: 'lg1',
-    brand: 'LG',
-    model_name: 'LG OLED evo 55" C5',
-    model_number: 'OLED55C5',
-    model_year: 2025,
-    ean: '8806090000021',
-    size: 55,
-    panel: 'OLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'lg2',
-    brand: 'LG',
-    model_name: 'LG OLED evo 65" C4',
-    model_number: 'OLED65C4',
-    model_year: 2025,
-    ean: '8806090000022',
-    size: 65,
-    panel: 'OLED',
-    segment: 'premium',
-    status: 'eol',
-    successorKey: 'lg3',
-  },
-  {
-    key: 'lg3',
-    brand: 'LG',
-    model_name: 'LG OLED evo 65" C5',
-    model_number: 'OLED65C5',
-    model_year: 2026,
-    ean: '8806090000023',
-    size: 65,
-    panel: 'OLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'lg4',
-    brand: 'LG',
-    model_name: 'LG QNED 75" QNED85',
-    model_number: 'QNED75QNED85',
-    model_year: 2026,
-    ean: '8806090000024',
-    size: 75,
-    panel: 'MiniLED',
-    segment: 'mid',
-    status: 'active',
-  },
-  // Sony
-  {
-    key: 'sony1',
-    brand: 'Sony',
-    model_name: 'Sony BRAVIA 8 OLED 55"',
-    model_number: 'K55XR80',
-    model_year: 2025,
-    ean: '8806090000031',
-    size: 55,
-    panel: 'OLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'sony2',
-    brand: 'Sony',
-    model_name: 'Sony BRAVIA 7 MiniLED 65"',
-    model_number: 'K65XR70',
-    model_year: 2026,
-    ean: '8806090000032',
-    size: 65,
-    panel: 'MiniLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'sony3',
-    brand: 'Sony',
-    model_name: 'Sony BRAVIA 3 LED 50"',
-    model_number: 'K50S30',
-    model_year: 2025,
-    ean: '8806090000033',
-    size: 50,
-    panel: 'LED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'sony4',
-    brand: 'Sony',
-    model_name: 'Sony BRAVIA 9 MiniLED 85"',
-    model_number: 'K85XR90',
-    model_year: 2026,
-    ean: '8806090000034',
-    size: 85,
-    panel: 'MiniLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  // Philips
-  {
-    key: 'phi1',
-    brand: 'Philips',
-    model_name: 'Philips OLED810 48"',
-    model_number: '48OLED810',
-    model_year: 2026,
-    ean: '8806090000041',
-    size: 48,
-    panel: 'OLED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'phi2',
-    brand: 'Philips',
-    model_name: 'Philips The One 55" PUS8909',
-    model_number: '55PUS8909',
-    model_year: 2025,
-    ean: '8806090000042',
-    size: 55,
-    panel: 'LED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'phi3',
-    brand: 'Philips',
-    model_name: 'Philips OLED910 65"',
-    model_number: '65OLED910',
-    model_year: 2026,
-    ean: '8806090000043',
-    size: 65,
-    panel: 'OLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'phi4',
-    brand: 'Philips',
-    model_name: 'Philips PUS7009 43"',
-    model_number: '43PUS7009',
-    model_year: 2025,
-    ean: '8806090000044',
-    size: 43,
-    panel: 'LED',
-    segment: 'budget',
-    status: 'active',
-  },
-  // TCL
-  {
-    key: 'tcl1',
-    brand: 'TCL',
-    model_name: 'TCL C805 75" MiniLED',
-    model_number: '75C805',
-    model_year: 2025,
-    ean: '8806090000051',
-    size: 75,
-    panel: 'MiniLED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'tcl2',
-    brand: 'TCL',
-    model_name: 'TCL C755 65" MiniLED',
-    model_number: '65C755',
-    model_year: 2026,
-    ean: '8806090000052',
-    size: 65,
-    panel: 'MiniLED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'tcl3',
-    brand: 'TCL',
-    model_name: 'TCL P755 50" LED',
-    model_number: '50P755',
-    model_year: 2025,
-    ean: '8806090000053',
-    size: 50,
-    panel: 'LED',
-    segment: 'budget',
-    status: 'active',
-  },
-  {
-    key: 'tcl4',
-    brand: 'TCL',
-    model_name: 'TCL C855 85" MiniLED',
-    model_number: '85C855',
-    model_year: 2026,
-    ean: '8806090000054',
-    size: 85,
-    panel: 'MiniLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  // Hisense
-  {
-    key: 'his1',
-    brand: 'Hisense',
-    model_name: 'Hisense U7N 65" MiniLED',
-    model_number: '65U7N',
-    model_year: 2025,
-    ean: '8806090000061',
-    size: 65,
-    panel: 'MiniLED',
-    segment: 'mid',
-    status: 'active',
-  },
-  {
-    key: 'his2',
-    brand: 'Hisense',
-    model_name: 'Hisense U8Q 75" MiniLED',
-    model_number: '75U8Q',
-    model_year: 2026,
-    ean: '8806090000062',
-    size: 75,
-    panel: 'MiniLED',
-    segment: 'premium',
-    status: 'active',
-  },
-  {
-    key: 'his3',
-    brand: 'Hisense',
-    model_name: 'Hisense E7Q 55" QLED',
-    model_number: '55E7Q',
-    model_year: 2026,
-    ean: '8806090000063',
-    size: 55,
-    panel: 'QLED',
-    segment: 'budget',
-    status: 'active',
-  },
-  {
-    key: 'his4',
-    brand: 'Hisense',
-    model_name: 'Hisense A6N 43" LED',
-    model_number: '43A6N',
-    model_year: 2025,
-    ean: '8806090000064',
-    size: 43,
-    panel: 'LED',
-    segment: 'budget',
-    status: 'active',
-  },
-];
-
-function salePriceCents(size: number, segment: Segment): number {
-  const base = SIZE_BASE[size] ?? 99900;
-  return Math.round((base * SEG_MULT[segment]) / 100) * 100 - 100; // eindigt op ,99
-}
+// Geschatte inkoopmarge per segment (excl. btw) tot Vendit de echte inkoop levert.
+const SEG_MARGE: Record<string, number> = { budget: 9, mid: 13, premium: 17 };
 
 async function reset() {
   // Kinderen eerst i.v.m. FK's.
@@ -389,49 +68,39 @@ async function main() {
   if (bErr) throw bErr;
   const brandId = new Map(brandRows!.map((b) => [b.name, b.id as string]));
 
-  // Producten
+  // Producten — volledige gegenereerde catalogus (317 modellen).
   const { data: prodRows, error: pErr } = await db
     .from('products')
     .insert(
-      SPECS.map((s, i) => ({
-        brand_id: brandId.get(s.brand)!,
-        model_name: s.model_name,
-        model_number: s.model_number,
-        model_year: s.model_year,
-        ean: SEED_EANS[i],
-        screen_size_inch: s.size,
-        panel_type: s.panel,
-        segment: s.segment,
-        sku_hellotv: `HTV-${s.model_number}`,
-        status: s.status,
+      CAT.map((c) => ({
+        brand_id: brandId.get(c.merk)!,
+        model_name: c.model_name,
+        model_number: c.model_number,
+        model_year: c.jaar,
+        ean: c.ean,
+        screen_size_inch: c.inch,
+        panel_type: PANEL_DB[c.klasse],
+        segment: c.segment,
+        sku_hellotv: `HTV-${c.model_number}`,
+        status: c.status,
       })),
     )
     .select('id,model_number');
   if (pErr) throw pErr;
   const pid = new Map<string, string>();
-  SPECS.forEach((s) => {
-    const row = prodRows!.find((r) => r.model_number === s.model_number);
-    if (row) pid.set(s.key, row.id as string);
+  const rowByNr = new Map((prodRows ?? []).map((r) => [r.model_number, r.id as string]));
+  CAT.forEach((c) => {
+    const id = rowByNr.get(c.model_number);
+    if (id) pid.set(c.key, id);
   });
 
-  // Opvolgers (EOL -> 2026)
-  for (const s of SPECS) {
-    if (s.successorKey) {
-      await db
-        .from('products')
-        .update({ successor_id: pid.get(s.successorKey) })
-        .eq('id', pid.get(s.key));
-    }
-  }
-
-  // Prijzen (marge 8–28%)
-  const priceRows = SPECS.map((s, i) => {
-    const sale = salePriceCents(s.size, s.segment);
+  // Prijzen — verkoop = ticket (incl. btw); inkoop (excl. btw) via geschatte segmentmarge.
+  const priceRows = CAT.map((c) => {
+    const sale = c.ticket_c;
     const excl = Math.round((sale * 100) / (100 + VAT));
-    const marginPct = MARGINS[i % MARGINS.length];
-    const purchase = Math.round(excl * (1 - marginPct / 100));
+    const purchase = Math.round(excl * (1 - SEG_MARGE[c.segment] / 100));
     return {
-      product_id: pid.get(s.key)!,
+      product_id: pid.get(c.key)!,
       purchase_price_cents: purchase,
       sale_price_cents: sale,
       sale_price_includes_vat: true,
@@ -444,28 +113,18 @@ async function main() {
   const { error: prErr } = await db.from('prices').insert(priceRows);
   if (prErr) throw prErr;
 
-  // Voorraad over 2 locaties
-  const stockRows = SPECS.flatMap((s, i) => [
-    {
-      product_id: pid.get(s.key)!,
-      location_code: 'WINKEL',
-      location_name: 'Winkel Oosterhout',
-      qty: (i * 3) % 7,
-    },
-    {
-      product_id: pid.get(s.key)!,
-      location_code: 'MAGAZIJN',
-      location_name: 'Centraal magazijn',
-      qty: (i * 2 + 1) % 11,
-    },
+  // Voorraad over 2 locaties (deterministisch, niet elk model op voorraad).
+  const stockRows = CAT.flatMap((c, i) => [
+    { product_id: pid.get(c.key)!, location_code: 'WINKEL', location_name: 'Winkel Oosterhout', qty: (i * 3) % 7 },
+    { product_id: pid.get(c.key)!, location_code: 'MAGAZIJN', location_name: 'Centraal magazijn', qty: (i * 2 + 1) % 11 },
   ]);
   const { error: sErr } = await db.from('stock_levels').insert(stockRows);
   if (sErr) throw sErr;
 
-  // RFID: 12 gekoppeld + 5 ongekoppeld
-  const linked = SPECS.slice(0, 12).map((s, i) => ({
+  // RFID: eerste 12 modellen gekoppeld + 5 ongekoppeld (demo).
+  const linked = CAT.slice(0, 12).map((c, i) => ({
     epc: `E280117000000200000000${(i + 10).toString(16).toUpperCase().padStart(2, '0')}`,
-    product_id: pid.get(s.key)!,
+    product_id: pid.get(c.key)!,
     status: 'active',
     linked_at: new Date().toISOString(),
   }));
