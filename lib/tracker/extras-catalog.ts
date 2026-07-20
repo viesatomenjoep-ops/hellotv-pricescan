@@ -52,22 +52,33 @@ export const EXTRAS: ExtraCategorie[] = [
     naam: 'Muurbeugel',
     icon: 'frame',
     variants: [
-      { id: 'mb-vast', label: 'Vast', prijs_c: c(39.99), marge_c: c(24) },
-      { id: 'mb-kantel', label: 'Kantelbaar', prijs_c: c(59.99), marge_c: c(36) },
-      { id: 'mb-full', label: 'Full-motion', prijs_c: c(89.99), marge_c: c(54) },
+      { id: 'mb-vast', label: 'Vast', prijs_c: c(59.99), marge_c: c(38) },
+      { id: 'mb-kantel', label: 'Kantelbaar', prijs_c: c(99.99), marge_c: c(62) },
+      { id: 'mb-full', label: 'Full-motion', prijs_c: c(199.99), marge_c: c(125) },
     ],
   },
   {
     id: 'montage',
-    naam: 'Montage',
+    naam: 'Ophangen',
     icon: 'wrench',
-    variants: [
-      { id: 'mo-basis', label: 'Ophangen', prijs_c: c(49.99), marge_c: c(45) },
-      { id: 'mo-plus', label: 'Ophangen + kabels', prijs_c: c(89.99), marge_c: c(80) },
-      { id: 'mo-premium', label: 'Premium installatie', prijs_c: c(129.99), marge_c: c(115) },
-    ],
+    // Prijs is maat-afhankelijk (>85" = €199,99); zie montageVariant(inch).
+    variants: [{ id: 'mo', label: 'Ophangservice', prijs_c: c(99.99), marge_c: c(90) }],
   },
 ];
+
+// Montage-prijs hangt af van de schermmaat: >85 inch = €199,99, anders €99,99.
+export function montageVariant(inch: number): ExtraVariant {
+  return inch > 85
+    ? { id: 'mo', label: 'Ophangservice (>85")', prijs_c: c(199.99), marge_c: c(180) }
+    : { id: 'mo', label: 'Ophangservice', prijs_c: c(99.99), marge_c: c(90) };
+}
+
+// Catalogus voor een concreet toestel (montage-prijs op maat).
+export function getExtras(inch: number): ExtraCategorie[] {
+  return EXTRAS.map((cat) =>
+    cat.id === 'montage' ? { ...cat, variants: [montageVariant(inch)] } : cat,
+  );
+}
 
 // Eén gekozen regel (categorie → variant × aantal).
 export interface GekozenExtra {
@@ -81,9 +92,9 @@ export interface GekozenExtra {
 
 export type ExtraSelectie = Record<string, { variantId: string; aantal: number }>;
 
-export function gekozenExtras(sel: ExtraSelectie): GekozenExtra[] {
+export function gekozenExtras(sel: ExtraSelectie, inch = 0): GekozenExtra[] {
   const out: GekozenExtra[] = [];
-  for (const cat of EXTRAS) {
+  for (const cat of getExtras(inch)) {
     const s = sel[cat.id];
     if (!s || s.aantal < 1) continue;
     const v = cat.variants.find((x) => x.id === s.variantId);

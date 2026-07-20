@@ -202,7 +202,10 @@ export function ScanClient({
     [data.toestellen],
   );
 
-  const gekozen = useMemo(() => gekozenExtras(extraSel), [extraSel]);
+  const gekozen = useMemo(
+    () => gekozenExtras(extraSel, selected?.inch ?? 0),
+    [extraSel, selected?.inch],
+  );
 
   const calc = useMemo(() => {
     if (!selected) return null;
@@ -576,7 +579,7 @@ export function ScanClient({
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-sm font-semibold">Combideal &amp; service</p>
-            <DealExtras selectie={extraSel} onChange={setExtraSel} />
+            <DealExtras selectie={extraSel} onChange={setExtraSel} inch={selected.inch ?? 0} />
             {calc && gekozen.length > 0 && (
               <div className="flex justify-between border-t pt-2 text-sm font-semibold">
                 <span>Totaal incl. extra&apos;s: {formatEuro(calc.totaalPrijs)}</span>

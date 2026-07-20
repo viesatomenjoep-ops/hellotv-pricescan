@@ -3,7 +3,7 @@
 import { ShieldCheck, Cable, Frame, Wrench, Minus, Plus, type LucideIcon } from 'lucide-react';
 import { formatEuro } from '@/lib/pricing/margin';
 import { cn } from '@/lib/utils';
-import { EXTRAS, type ExtraSelectie } from '@/lib/tracker/extras-catalog';
+import { getExtras, type ExtraSelectie } from '@/lib/tracker/extras-catalog';
 
 const ICONS: Record<string, LucideIcon> = {
   'shield-check': ShieldCheck,
@@ -17,10 +17,13 @@ const ICONS: Record<string, LucideIcon> = {
 export function DealExtras({
   selectie,
   onChange,
+  inch = 0,
 }: {
   selectie: ExtraSelectie;
   onChange: (s: ExtraSelectie) => void;
+  inch?: number;
 }) {
+  const extras = getExtras(inch);
   function kies(catId: string, variantId: string) {
     const huidig = selectie[catId];
     const next = { ...selectie };
@@ -40,7 +43,7 @@ export function DealExtras({
 
   return (
     <div className="space-y-3">
-      {EXTRAS.map((cat) => {
+      {extras.map((cat) => {
         const Icon = ICONS[cat.icon] ?? Frame;
         const sel = selectie[cat.id];
         return (
