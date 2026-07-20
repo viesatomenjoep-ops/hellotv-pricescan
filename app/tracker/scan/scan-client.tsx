@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatEuro } from '@/lib/pricing/margin';
 import { useFlag } from '@/components/tracker/flags-provider';
 import type { ScanData, ScanToestel } from '@/lib/tracker/scan-data';
-import { maakAanbiedingAction } from './actions';
+import { AanbiedingSheet } from './aanbieding-sheet';
 
 const SERVICE = [
   'Pixelgarantie',
@@ -41,14 +41,14 @@ export function ScanClient({ data }: { data: ScanData }) {
   const [dealPrice, setDealPrice] = useState(0);
   const [extras, setExtras] = useState<Set<string>>(new Set());
   const [filiaal, setFiliaal] = useState(data.filialen[0]?.id ?? '');
-  const [msg, setMsg] = useState<string | null>(null);
+  const [sheet, setSheet] = useState(false);
 
   function kies(t: ScanToestel) {
     setSelected(t);
     setDealPrice(t.ticket_c);
     setExtras(new Set());
     setKlantView(false);
-    setMsg(null);
+    setSheet(false);
   }
 
   function autoScan() {
@@ -106,16 +106,9 @@ export function ScanClient({ data }: { data: ScanData }) {
     setDealPrice((p) => Math.max(0, p + deltaEuro * 100));
   }
 
-  async function maakAanbieding() {
-    if (!selected || !calc) return;
-    const res = await maakAanbiedingAction({
-      toestelId: selected.id,
-      prijsC: calc.totaalPrijs,
-      kortingPct: calc.korting,
-      extras: Array.from(extras),
-    });
-    setMsg(res.ok ? 'Aanbieding aangemaakt (concept).' : res.error);
-  }
+  const geselecteerdeExtras = data.bijverkoop
+    .filter((b) => extras.has(b.id))
+    .map((b) => ({ naam: b.naam, prijs_c: b.prijs_c }));
 
   // ── Nog geen toestel gekozen: scan-scherm ──────────────────────────────
   if (!selected) {
@@ -388,16 +381,24 @@ export function ScanClient({ data }: { data: ScanData }) {
         </div>
       )}
 
-      {msg && <p className="text-sm font-medium text-green-700">{msg}</p>}
-
       <div className="sticky bottom-16 flex gap-2 md:bottom-0">
-        <Button className="flex-1" onClick={maakAanbieding}>
+        <Button className="flex-1" onClick={() => setSheet(true)}>
           Maak aanbieding
         </Button>
         <Button variant="secondary" onClick={() => setSelected(null)}>
           Opnieuw
         </Button>
       </div>
+
+      {sheet && (
+        <AanbiedingSheet
+          toestel={selected}
+          startPrijs={dealPrice}
+          extras={geselecteerdeExtras}
+          klanten={data.klanten}
+          onClose={() => setSheet(false)}
+        />
+      )}
     </div>
   );
 }

@@ -24,6 +24,13 @@ export interface ScanToestel {
   lifetimeMargeC: number;
 }
 
+export interface ScanKlant {
+  id: string;
+  naam: string;
+  segment: string | null;
+  prijsfactor: number;
+}
+
 export interface ScanData {
   toestellen: ScanToestel[];
   filialen: Array<{ id: string; naam: string; plaats: string | null }>;
@@ -34,6 +41,7 @@ export interface ScanData {
     prijs_c: number;
     marge_c: number;
   }>;
+  klanten: Array<{ id: string; naam: string; segment: string | null; prijsfactor: number }>;
 }
 
 export async function getScanData(): Promise<ScanData> {
@@ -45,6 +53,7 @@ export async function getScanData(): Promise<ScanData> {
     { data: events },
     { data: filialen },
     { data: bijverkoop },
+    { data: klanten },
   ] = await Promise.all([
     supabase.from('toestellen').select('*'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal'),
@@ -52,6 +61,7 @@ export async function getScanData(): Promise<ScanData> {
     supabase.from('verkoop_events').select('toestel_id, marge_c'),
     supabase.from('filialen').select('id, naam, plaats').order('naam'),
     supabase.from('bijverkoop').select('id, naam, categorie, prijs_c, marge_c').order('categorie'),
+    supabase.from('klanten').select('id, naam, segment, prijsfactor').order('naam'),
   ]);
 
   const voorraadMap = new Map<number, Record<string, number>>();
@@ -95,5 +105,6 @@ export async function getScanData(): Promise<ScanData> {
     toestellen: rows,
     filialen: filialen ?? [],
     bijverkoop: bijverkoop ?? [],
+    klanten: (klanten ?? []).map((k) => ({ ...k, prijsfactor: Number(k.prijsfactor) })),
   };
 }
