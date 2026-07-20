@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { headers } from 'next/headers';
 import { getSessionUser } from '@/lib/auth';
 import { SignOutButton } from './sign-out-button';
@@ -31,9 +32,16 @@ export async function AppHeader() {
   return (
     <header className="flex items-center justify-between gap-4 bg-foreground px-4 py-2 text-background">
       <div className="flex items-center gap-6">
-        <Link href="/" className="font-logo text-lg font-extrabold tracking-tight">
-          <span className="text-primary">hello</span>TV{' '}
-          <span className="font-sans text-sm font-semibold opacity-90">PriceScan</span>
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/hellotv-logo-white.png"
+            alt="helloTV"
+            width={110}
+            height={44}
+            priority
+            className="h-7 w-auto"
+          />
+          <span className="text-sm font-semibold opacity-90">PriceScan</span>
         </Link>
         <nav className="flex gap-4 text-sm">
           {nav.map((n) => (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatEuro } from '@/lib/pricing/margin';
@@ -81,9 +82,13 @@ export function AanbiedingSheet({
         {/* Printbare bon */}
         <div className="rounded-xl border p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="font-logo text-lg font-extrabold">
-              hello<span className="text-primary">TV</span>
-            </span>
+            <Image
+              src="/hellotv-logo.png"
+              alt="helloTV"
+              width={90}
+              height={38}
+              className="h-6 w-auto"
+            />
             <span className="text-xs text-muted-foreground">Aanbieding</span>
           </div>
           <p className="text-sm font-semibold">{toestel.model}</p>

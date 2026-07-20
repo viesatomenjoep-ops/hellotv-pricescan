@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
@@ -96,15 +97,17 @@ export function TrackerShell({
     <div className="flex min-h-screen bg-muted/40">
       {/* Sidebar (desktop) */}
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-background md:flex">
-        <Link href="/tracker" className="flex items-center gap-2 px-4 py-4">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-logo text-sm font-extrabold text-primary-foreground">
-            tv
-          </span>
-          <span className="font-logo text-base font-extrabold leading-none">
-            Hello<span className="text-primary">TV</span>
-            <span className="block font-sans text-xs font-medium text-muted-foreground">
-              Sales Tracker
-            </span>
+        <Link href="/tracker" className="block px-4 py-4">
+          <Image
+            src="/hellotv-logo.png"
+            alt="helloTV"
+            width={120}
+            height={51}
+            priority
+            className="h-7 w-auto"
+          />
+          <span className="mt-1 block text-xs font-medium text-muted-foreground">
+            Sales Tracker
           </span>
         </Link>
         <nav className="flex-1 space-y-4 overflow-y-auto px-2 py-2">
