@@ -28,6 +28,15 @@ const SERVICE = [
 function margeTone(pct: number) {
   return pct >= 25 ? 'text-green-700' : pct >= 15 ? 'text-orange-700' : 'text-red-700';
 }
+
+// Marge-verdict voor de radar: kleur + korte tekst, glanceable (kleur is het signaal).
+function margeVerdict(pct: number) {
+  if (pct >= 16)
+    return { tier: 'hoog', paneel: 'bg-green-50 border-green-200', ring: 'bg-green-600', tekst: 'text-green-800', label: 'Sterke marge', advies: 'Push dit toestel' };
+  if (pct >= 12)
+    return { tier: 'mid', paneel: 'bg-amber-50 border-amber-200', ring: 'bg-amber-500', tekst: 'text-amber-800', label: 'Redelijke marge', advies: 'Prima — of pak een alternatief' };
+  return { tier: 'laag', paneel: 'bg-red-50 border-red-200', ring: 'bg-red-600', tekst: 'text-red-800', label: 'Lage marge', advies: 'Stuur naar een beter alternatief' };
+}
 const KLASSE_KLEUR: Record<string, string> = {
   OLED: 'bg-[#EFEAF7] text-[#6B4EAA]',
   QLED: 'bg-[#E4EEFA] text-[#2563B8]',
@@ -82,6 +91,8 @@ export function ScanClient({
     setKlantView(false);
     setSheet(false);
     setPendingEpc(null);
+    // Voelbare 'trigger' zodat de verkoper niet naar het scherm hoeft te kijken.
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(18);
   }, []);
 
   // Verwerk een binnengekomen scan (HID, Web Serial of handmatig).
@@ -223,6 +234,34 @@ export function ScanClient({
       }))
       .sort((a, b) => b.margePct - a.margePct)
       .slice(0, 3);
+  }, [selected, data.toestellen]);
+
+  // Marge-radar + slimme alternatieven op marge (deze maat, prijsrange, maat kleiner).
+  const margePctVan = (t: ScanToestel) =>
+    t.ticket_c > 0 ? ((t.ticket_c - t.inkoop_c) / t.ticket_c) * 100 : 0;
+
+  const slim = useMemo(() => {
+    if (!selected) return null;
+    const inch = selected.inch;
+    const withM = (arr: ScanToestel[]) =>
+      arr.map((t) => ({ ...t, m: margePctVan(t) })).sort((a, b) => b.m - a.m);
+    const anders = data.toestellen.filter((t) => t.id !== selected.id && t.voorraadTotaal > 0);
+    const dezeMaat = withM(anders.filter((t) => inch != null && t.inch === inch)).slice(0, 3);
+    const lo = selected.ticket_c * 0.85;
+    const hi = selected.ticket_c * 1.15;
+    const prijsrange = withM(
+      anders.filter((t) => t.ticket_c >= lo && t.ticket_c <= hi && t.inch !== inch),
+    ).slice(0, 3);
+    const kleinereMaten =
+      inch != null
+        ? Array.from(
+            new Set(anders.map((t) => t.inch).filter((n): n is number => n != null && n < inch)),
+          ).sort((a, b) => b - a)
+        : [];
+    const kleinerMaat = kleinereMaten[0] ?? null;
+    const maatKleiner =
+      kleinerMaat != null ? withM(anders.filter((t) => t.inch === kleinerMaat)).slice(0, 2) : [];
+    return { eigenMarge: margePctVan(selected), dezeMaat, prijsrange, maatKleiner, kleinerMaat };
   }, [selected, data.toestellen]);
 
   function adjust(deltaEuro: number) {
@@ -410,6 +449,50 @@ export function ScanClient({
           </div>
         )}
       </div>
+
+      {/* Marge-radar — eerste, glanceable signaal na de scan (alleen verkoper) */}
+      {!klantView &&
+        slim &&
+        (() => {
+          const v = margeVerdict(slim.eigenMarge);
+          return (
+            <div className={`flex items-center gap-4 rounded-2xl border p-4 ${v.paneel}`}>
+              <div
+                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-white ${v.ring}`}
+              >
+                <span className="text-xl font-extrabold tabular-nums">
+                  {Math.round(slim.eigenMarge)}%
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className={`text-base font-bold ${v.tekst}`}>{v.label}</p>
+                <p className="text-sm text-muted-foreground">{v.advies}</p>
+                <p className="text-sm font-semibold">
+                  {formatEuro(selected.ticket_c - selected.inkoop_c)} marge
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* Slimme alternatieven op marge */}
+      {!klantView && slim && (
+        <div className="space-y-3">
+          <AltStrip titel={`Top marge · ${selected.inch}"`} items={slim.dezeMaat} onPick={kies} />
+          <AltStrip
+            titel="Zelfde prijsklasse · beste marge"
+            items={slim.prijsrange}
+            onPick={kies}
+          />
+          {slim.kleinerMaat != null && (
+            <AltStrip
+              titel={`Maat kleiner (${slim.kleinerMaat}") · beste marge`}
+              items={slim.maatKleiner}
+              onPick={kies}
+            />
+          )}
+        </div>
+      )}
 
       {/* Verkoper-view: marges */}
       {!klantView && calc && (
@@ -604,6 +687,42 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 font-medium">{children}</p>
+    </div>
+  );
+}
+
+// Compacte, horizontaal scrollbare rij met marge-alternatieven (aantikken = wissel toestel).
+function AltStrip({
+  titel,
+  items,
+  onPick,
+}: {
+  titel: string;
+  items: Array<ScanToestel & { m: number }>;
+  onPick: (t: ScanToestel) => void;
+}) {
+  if (!items.length) return null;
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{titel}</p>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {items.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => onPick(t)}
+            className="w-40 shrink-0 rounded-xl border bg-background p-2.5 text-left hover:bg-muted active:scale-[0.98]"
+          >
+            <span className="block truncate text-sm font-medium">{t.model}</span>
+            <span className="block truncate text-xs text-muted-foreground">
+              {t.merk} · {t.inch}&quot;
+            </span>
+            <span className={`text-sm font-bold ${margeVerdict(t.m).tekst}`}>
+              {t.m.toFixed(0)}% marge
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

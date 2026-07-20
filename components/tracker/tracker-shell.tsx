@@ -250,7 +250,7 @@ export function TrackerShell({
             className="absolute inset-0 bg-foreground/40"
             onClick={() => setMenuOpen(false)}
           />
-          <aside className="pt-safe elev-2 absolute inset-y-0 left-0 flex w-[84%] max-w-xs flex-col bg-background">
+          <aside className="pt-safe elev-2 absolute inset-y-0 left-0 flex w-[78%] max-w-[280px] flex-col bg-background">
             <div className="flex items-center justify-between border-b px-4 py-4">
               <Image src="/hellotv-logo.png" alt="helloTV" width={120} height={51} className="h-7 w-auto" />
               <button
@@ -273,9 +273,9 @@ export function TrackerShell({
           <button
             onClick={() => setMenuOpen(true)}
             aria-label="Menu"
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted md:hidden"
+            className="-ml-1 flex h-11 w-11 items-center justify-center rounded-xl hover:bg-muted md:hidden"
           >
-            <Menu className="h-5 w-5" strokeWidth={1.75} />
+            <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
           <Link href="/tracker" className="md:hidden">
             <Image src="/hellotv-logo.png" alt="helloTV" width={120} height={51} className="h-6 w-auto" />
