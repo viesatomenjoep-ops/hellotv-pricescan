@@ -3,9 +3,11 @@
 import { useMemo, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatEuro } from '@/lib/pricing/margin';
 import { useFlag } from '@/components/tracker/flags-provider';
+import { FiliaalSelect } from '@/components/tracker/filiaal-select';
 import type { ToestelRow, Filiaal } from '@/lib/tracker/queries';
 import { vmsSyncAction } from './actions';
 
@@ -27,17 +29,20 @@ export function VoorraadClient({
   const vmsSync = useFlag('voorraad.vms_sync');
   const vmsAfwijking = useFlag('voorraad.vms_afwijking');
   const [filiaal, setFiliaal] = useState('alle');
+  const [q, setQ] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const aantalVoor = (t: ToestelRow) =>
     filiaal === 'alle' ? t.voorraadTotaal : (t.voorraad[filiaal] ?? 0);
 
-  const rows = useMemo(
-    () => [...toestellen].sort((a, b) => aantalVoor(a) - aantalVoor(b)),
+  const rows = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    return [...toestellen]
+      .filter((t) => !term || `${t.model} ${t.type_nr} ${t.merk}`.toLowerCase().includes(term))
+      .sort((a, b) => aantalVoor(a) - aantalVoor(b));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [toestellen, filiaal],
-  );
+  }, [toestellen, filiaal, q]);
 
   const kpis = useMemo(() => {
     const totaal = rows.reduce((s, t) => s + aantalVoor(t), 0);
@@ -86,22 +91,25 @@ export function VoorraadClient({
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {[{ id: 'alle', naam: 'Alle filialen' }, ...filialen].map((f) => (
-          <Button
-            key={f.id}
-            size="sm"
-            variant={filiaal === f.id ? 'default' : 'outline'}
-            onClick={() => setFiliaal(f.id)}
-          >
-            {f.naam}
-          </Button>
-        ))}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <FiliaalSelect
+          filialen={filialen}
+          value={filiaal}
+          onChange={setFiliaal}
+          className="w-full sm:w-64"
+        />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Zoek model, typenummer of merk…"
+          className="w-full rounded-full sm:max-w-xs"
+        />
+        <span className="text-sm text-muted-foreground sm:ml-auto">{rows.length} modellen</span>
       </div>
 
-      <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto rounded-2xl border bg-card elev-1">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left">
+          <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="p-2">Model</th>
               <th className="p-2">Klasse</th>

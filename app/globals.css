@@ -18,16 +18,19 @@
     --primary-foreground: 0 0% 7%; /* zwart op geel */
     --secondary: 0 0% 7%; /* inkt (secundaire knop) */
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 5% 97%; /* grey-50 */
+    --muted: 240 6% 96%; /* grey-50 */
     --muted-foreground: 240 4% 41%; /* grey-600 */
     --accent: 50 100% 90%; /* yellow-soft */
     --accent-foreground: 0 0% 7%;
     --destructive: 354 58% 48%; /* status schade */
     --destructive-foreground: 0 0% 100%;
-    --border: 240 7% 91%; /* border-subtle */
-    --input: 240 7% 91%;
+    --border: 240 6% 89%; /* border-subtle, iets zichtbaarder */
+    --input: 240 6% 89%;
     --ring: 49 100% 50%; /* gele focus-ring */
-    --radius: 0.75rem; /* 12px, DS radius-md */
+    --radius: 0.875rem; /* 14px, iets ronder/app-native */
+
+    /* App-canvas: zachte neutrale achtergrond zodat witte kaarten definitie krijgen. */
+    --app: 240 8% 95.5%;
 
     /* Directe DS-tokens (voor grafieken/branding). */
     --yellow: #ffd200;
@@ -55,6 +58,26 @@
 /* Woordmerk in Baloo 2 (alleen voor de logo-lockup). */
 .font-logo {
   font-family: var(--font-logo), system-ui, sans-serif;
+}
+
+/* App-canvas: zachte achtergrond achter de kaarten (Tracker-shell). */
+.app-canvas {
+  background-color: hsl(var(--app));
+}
+
+/* Zachte, app-achtige diepte voor kaarten/menu's. */
+.elev-1 {
+  box-shadow:
+    0 1px 2px hsl(240 6% 10% / 0.04),
+    0 1px 3px hsl(240 6% 10% / 0.06);
+}
+.elev-2 {
+  box-shadow:
+    0 2px 4px hsl(240 6% 10% / 0.05),
+    0 6px 16px hsl(240 6% 10% / 0.08);
+}
+.elev-nav {
+  box-shadow: 0 -1px 0 hsl(var(--border)), 0 -8px 24px hsl(240 6% 10% / 0.06);
 }
 
 /* Safe-area helpers (iPhone notch/home-indicator, viewport-fit=cover). */
