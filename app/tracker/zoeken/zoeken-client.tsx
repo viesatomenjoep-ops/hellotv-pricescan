@@ -64,12 +64,12 @@ export function ZoekenClient({ toestellen }: { toestellen: ToestelRow[] }) {
             key={t.id}
             className="flex items-center justify-between rounded-lg border bg-background p-3"
           >
-            <div>
+            <Link href={`/tracker/toestellen/${t.id}`} className="min-w-0 flex-1 hover:underline">
               <p className="text-sm font-medium">{t.model}</p>
               <p className="text-xs text-muted-foreground">
                 {t.merk} · {t.type_nr} · {t.inch}&quot; · {formatEuro(t.ticket_c)}
               </p>
-            </div>
+            </Link>
             <Button size="sm" asChild>
               <Link href={`/tracker/scan?toestel=${t.id}`}>Aanbieding</Link>
             </Button>

@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { getDashboard } from '@/lib/tracker/queries';
+import { getDashboard, getTarget } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatEuro } from '@/lib/pricing/margin';
+import { MargeGauge } from '@/components/tracker/marge-gauge';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,7 @@ function margeTone(pct: number): string {
 }
 
 export default async function TrackerDashboard() {
-  const d = await getDashboard();
+  const [d, target] = await Promise.all([getDashboard(), getTarget()]);
 
   const kpis = [
     { label: 'Toestellen', value: d.toestellen },
@@ -38,6 +39,8 @@ export default async function TrackerDashboard() {
         ))}
       </div>
 
+      <MargeGauge target={target} />
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -47,7 +50,7 @@ export default async function TrackerDashboard() {
             <ul className="divide-y text-sm">
               {d.besteMarge.map((t) => (
                 <li key={t.id} className="flex items-center justify-between py-2">
-                  <Link href={`/tracker/scan?toestel=${t.id}`} className="hover:underline">
+                  <Link href={`/tracker/toestellen/${t.id}`} className="hover:underline">
                     {t.model}
                     <span className="ml-2 text-xs text-muted-foreground">{t.merk}</span>
                   </Link>

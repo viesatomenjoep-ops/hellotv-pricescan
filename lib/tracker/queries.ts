@@ -144,6 +144,49 @@ export async function getFilialenOverzicht(): Promise<
   });
 }
 
+export interface ToestelDetail extends ToestelRow {
+  lifetimeMargeC: number;
+  centraalAantal: number;
+  centraalEta: number | null;
+}
+
+export async function getToestelDetail(
+  id: number,
+): Promise<{ detail: ToestelDetail; filialen: Filiaal[] } | null> {
+  const supabase = createClient();
+  const [{ data: t }, { data: voorraad }, { data: centraal }, { data: events }, { data: filialen }] =
+    await Promise.all([
+      supabase.from('toestellen').select('*').eq('id', id).maybeSingle(),
+      supabase.from('voorraad').select('filiaal_id, aantal, wijkt_af_vms').eq('toestel_id', id),
+      supabase.from('centraal_magazijn').select('aantal, eta_dagen').eq('toestel_id', id).maybeSingle(),
+      supabase.from('verkoop_events').select('marge_c').eq('toestel_id', id),
+      supabase.from('filialen').select('id, naam, plaats').order('naam'),
+    ]);
+  if (!t) return null;
+
+  const v: Record<string, number> = {};
+  let afw = false;
+  for (const r of voorraad ?? []) {
+    v[r.filiaal_id] = r.aantal;
+    if (r.wijkt_af_vms) afw = true;
+  }
+  const margeC = t.ticket_c - t.inkoop_c;
+  return {
+    detail: {
+      id: t.id, merk: t.merk, model: t.model, type_nr: t.type_nr, ean: t.ean, inch: t.inch,
+      klasse: t.klasse, inkoop_c: t.inkoop_c, ticket_c: t.ticket_c, min_marge_c: t.min_marge_c,
+      verkoopsnelheid: t.verkoopsnelheid ?? 0, specs: t.specs, voorraad: v,
+      voorraadTotaal: Object.values(v).reduce((s, n) => s + n, 0),
+      margeC, margePct: t.ticket_c > 0 ? Math.round((margeC / t.ticket_c) * 1000) / 10 : 0,
+      wijktAfVms: afw,
+      lifetimeMargeC: (events ?? []).reduce((s, e) => s + e.marge_c, 0),
+      centraalAantal: centraal?.aantal ?? 0,
+      centraalEta: centraal?.eta_dagen ?? null,
+    },
+    filialen: filialen ?? [],
+  };
+}
+
 export interface AgendaItem {
   id: string;
   datum: string;
@@ -160,6 +203,25 @@ export async function getAgenda(): Promise<AgendaItem[]> {
     .select('id, datum, tijd, titel, type, locatie')
     .order('datum');
   return (data ?? []) as AgendaItem[];
+}
+
+export interface TargetRow {
+  periode: string;
+  omzet_c: number;
+  omzet_doel_c: number;
+  marge_pct: number;
+  marge_doel_pct: number;
+}
+
+export async function getTarget(): Promise<TargetRow | null> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('targets')
+    .select('periode, omzet_c, omzet_doel_c, marge_pct, marge_doel_pct')
+    .order('periode')
+    .limit(1)
+    .maybeSingle();
+  return (data as TargetRow) ?? null;
 }
 
 export async function getDashboard(): Promise<DashboardData> {

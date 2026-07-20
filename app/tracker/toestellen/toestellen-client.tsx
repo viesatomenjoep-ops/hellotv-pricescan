@@ -71,7 +71,7 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
         {rows.map((t) => (
           <Link
             key={t.id}
-            href={`/tracker/scan?toestel=${t.id}`}
+            href={`/tracker/toestellen/${t.id}`}
             className="flex items-center justify-between rounded-lg border bg-background p-3 hover:bg-muted"
           >
             <div>

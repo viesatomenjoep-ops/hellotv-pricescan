@@ -3,7 +3,13 @@ import { ScanClient } from './scan-client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ScanPage() {
+export default async function ScanPage({
+  searchParams,
+}: {
+  searchParams: { toestel?: string };
+}) {
   const data = await getScanData();
-  return <ScanClient data={data} />;
+  const parsed = searchParams.toestel ? Number(searchParams.toestel) : null;
+  const initieelToestelId = parsed != null && Number.isFinite(parsed) ? parsed : null;
+  return <ScanClient data={data} initieelToestelId={initieelToestelId} />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,7 +27,13 @@ const KLASSE_KLEUR: Record<string, string> = {
   LED: 'bg-muted text-muted-foreground',
 };
 
-export function ScanClient({ data }: { data: ScanData }) {
+export function ScanClient({
+  data,
+  initieelToestelId = null,
+}: {
+  data: ScanData;
+  initieelToestelId?: number | null;
+}) {
   const autoDetectie = useFlag('scan.auto_detectie');
   const privacyscherm = useFlag('scan.privacyscherm');
   const combideals = useFlag('scan.combideals');
@@ -50,6 +56,14 @@ export function ScanClient({ data }: { data: ScanData }) {
     setKlantView(false);
     setSheet(false);
   }
+
+  // Voorselectie vanuit toesteldetail (?toestel=id) — één keer bij het laden.
+  useEffect(() => {
+    if (initieelToestelId == null) return;
+    const t = data.toestellen.find((x) => x.id === initieelToestelId);
+    if (t) kies(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initieelToestelId]);
 
   function autoScan() {
     setScanning(true);
