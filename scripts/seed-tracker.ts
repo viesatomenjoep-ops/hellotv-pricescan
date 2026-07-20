@@ -13,20 +13,35 @@ const db = createClient(
   { auth: { persistSession: false } },
 );
 
+// De echte helloTV-filialen. type: 'xl' | 'standaard'. opent: null = open, anders opening-maand.
 const FILIALEN = [
-  { id: 'ams', naam: 'Amsterdam', plaats: 'Amsterdam-Zuid' },
-  { id: 'rot', naam: 'Rotterdam', plaats: 'Rotterdam-Centrum' },
-  { id: 'utr', naam: 'Utrecht', plaats: 'Utrecht' },
-  { id: 'ein', naam: 'Eindhoven', plaats: 'Eindhoven' },
-  { id: 'gro', naam: 'Groningen', plaats: 'Groningen' },
-  { id: 'dha', naam: 'Den Haag', plaats: 'Den Haag' },
+  // XL-filialen
+  { id: 'alk', naam: 'HelloTV Alkmaar', plaats: 'Alkmaar', adres: 'Huiswaarderplein 11A', postcode: '1823 CP', type: 'xl', opent: null },
+  { id: 'bop', naam: 'HelloTV Bergen op Zoom', plaats: 'Bergen op Zoom', adres: 'Van Konijnenburgweg 23', postcode: '4612 RC', type: 'xl', opent: null },
+  { id: 'cru', naam: 'HelloTV Cruquius', plaats: 'Cruquius', adres: 'Cruquiuszoom 49', postcode: '2142 EW', type: 'xl', opent: null },
+  { id: 'dui', naam: 'HelloTV Duiven', plaats: 'Duiven', adres: 'Nieuwgraaf 13', postcode: '6921 RJ', type: 'xl', opent: null },
+  { id: 'ein', naam: 'HelloTV Eindhoven', plaats: 'Eindhoven', adres: 'Ekkersrijt 4009', postcode: '5692 DB', type: 'xl', opent: null },
+  { id: 'rot', naam: 'HelloTV Rotterdam', plaats: 'Rotterdam', adres: 'Vierhavensstraat 169', postcode: '3029 BB', type: 'xl', opent: null },
+  { id: 'til', naam: 'HelloTV Tilburg', plaats: 'Tilburg', adres: 'Aabe-straat 58', postcode: '5021 AV', type: 'xl', opent: null },
+  { id: 'utr', naam: 'HelloTV Utrecht', plaats: 'Utrecht', adres: 'Hollantlaan 1', postcode: '3526 AL', type: 'xl', opent: null },
+  // Standaard & nieuwe filialen
+  { id: 'ams', naam: 'HelloTV Amsterdam', plaats: 'Amsterdam', adres: 'Daniël Goedkoopstraat 21b', postcode: '1096 BD', type: 'standaard', opent: 'oktober 2026' },
+  { id: 'ape', naam: 'HelloTV Apeldoorn', plaats: 'Apeldoorn', adres: 'De Voorwaarts 738', postcode: '7321 BT', type: 'standaard', opent: 'augustus 2026' },
+  { id: 'bre', naam: 'HelloTV Breda', plaats: 'Breda', adres: 'Ettensebaan 17A', postcode: '4812 XA', type: 'standaard', opent: null },
+  { id: 'dbo', naam: 'HelloTV Den Bosch', plaats: 'Den Bosch', adres: 'Goudsmidstraat 24', postcode: '5232 BP', type: 'standaard', opent: null },
+  { id: 'doe', naam: 'HelloTV Doetinchem', plaats: 'Doetinchem', adres: 'Innovatieweg 18', postcode: '7007 CD', type: 'standaard', opent: null },
+  { id: 'gro', naam: 'HelloTV Groningen', plaats: 'Groningen', adres: 'Roskildeweg 15', postcode: '9723 MA', type: 'standaard', opent: null },
+  { id: 'lee', naam: 'HelloTV Leeuwarden', plaats: 'Leeuwarden', adres: 'De Centrale 26', postcode: '8924 CZ', type: 'standaard', opent: null },
+  { id: 'naa', naam: 'HelloTV Naarden', plaats: 'Naarden', adres: 'Bronsstraat 10', postcode: '1411 AV', type: 'standaard', opent: null },
+  { id: 'nij', naam: 'HelloTV Nijmegen', plaats: 'Nijmegen', adres: 'Molenstraat 76', postcode: '6511 HH', type: 'standaard', opent: null },
+  { id: 'zoe', naam: 'HelloTV Zoeterwoude', plaats: 'Zoeterwoude', adres: 'Hoge Rijndijk 293', postcode: '2382 AN', type: 'standaard', opent: null },
 ];
 
 const VERKOPERS = [
-  { id: 'youri', naam: 'Youri', kleur: '#2563B8', filiaal_id: 'ams', rol: 'verkoper' },
+  { id: 'youri', naam: 'Youri', kleur: '#2563B8', filiaal_id: 'alk', rol: 'verkoper' },
   { id: 'calvin', naam: 'Calvin', kleur: '#0B7A53', filiaal_id: 'rot', rol: 'verkoper' },
   { id: 'ivo', naam: 'Ivo', kleur: '#C13443', filiaal_id: 'utr', rol: 'verkoper' },
-  { id: 'sanne', naam: 'Sanne', kleur: '#9A6400', filiaal_id: 'ams', rol: 'manager' },
+  { id: 'sanne', naam: 'Sanne', kleur: '#9A6400', filiaal_id: 'til', rol: 'manager' },
   { id: 'mees', naam: 'Mees', kleur: '#6B4EAA', filiaal_id: 'ein', rol: 'verkoper' },
   { id: 'fleur', naam: 'Fleur', kleur: '#B85C00', filiaal_id: 'gro', rol: 'verkoper' },
 ];
@@ -459,7 +474,13 @@ async function main() {
   await ins(
     'voorraad',
     TOESTELLEN.flatMap((t) =>
-      FILIALEN.map((f, i) => ({ toestel_id: t.id, filiaal_id: f.id, aantal: t.v[i] ?? 0 })),
+      FILIALEN.map((f, i) => {
+        // Nog niet geopende filialen hebben geen voorraad.
+        if (f.opent) return { toestel_id: t.id, filiaal_id: f.id, aantal: 0 };
+        const basis = t.v[i % t.v.length]; // demo-patroon cyclisch hergebruiken
+        const factor = f.type === 'xl' ? 1.5 : 0.8;
+        return { toestel_id: t.id, filiaal_id: f.id, aantal: Math.max(0, Math.round(basis * factor)) };
+      }),
     ),
   );
   await ins(

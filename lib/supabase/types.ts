@@ -280,25 +280,37 @@ export type Database = {
       };
       filialen: {
         Row: {
+          adres: string | null;
           id: string;
           lat: number | null;
           lng: number | null;
           naam: string;
+          opent: string | null;
           plaats: string | null;
+          postcode: string | null;
+          type: string;
         };
         Insert: {
+          adres?: string | null;
           id: string;
           lat?: number | null;
           lng?: number | null;
           naam: string;
+          opent?: string | null;
           plaats?: string | null;
+          postcode?: string | null;
+          type?: string;
         };
         Update: {
+          adres?: string | null;
           id?: string;
           lat?: number | null;
           lng?: number | null;
           naam?: string;
+          opent?: string | null;
           plaats?: string | null;
+          postcode?: string | null;
+          type?: string;
         };
         Relationships: [];
       };

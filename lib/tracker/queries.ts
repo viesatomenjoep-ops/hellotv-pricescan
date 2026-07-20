@@ -26,6 +26,10 @@ export interface Filiaal {
   id: string;
   naam: string;
   plaats: string | null;
+  adres?: string | null;
+  postcode?: string | null;
+  type?: string | null;
+  opent?: string | null;
 }
 
 export async function getToestellenMetVoorraad(): Promise<{
@@ -36,7 +40,7 @@ export async function getToestellenMetVoorraad(): Promise<{
   const [{ data: toestellen }, { data: voorraad }, { data: filialen }] = await Promise.all([
     supabase.from('toestellen').select('*'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal, wijkt_af_vms'),
-    supabase.from('filialen').select('id, naam, plaats').order('naam'),
+    supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent').order('naam'),
   ]);
 
   const perToestel = new Map<number, { v: Record<string, number>; afw: boolean }>();
@@ -124,6 +128,10 @@ export async function getFilialenOverzicht(): Promise<
     id: string;
     naam: string;
     plaats: string | null;
+    adres: string | null;
+    postcode: string | null;
+    type: string | null;
+    opent: string | null;
     aantal: number;
     waardeC: number;
     topMarge: number;
@@ -140,7 +148,18 @@ export async function getFilialenOverzicht(): Promise<
       waardeC += n * t.ticket_c;
       if (n > 0) topMarge = Math.max(topMarge, t.margePct);
     }
-    return { id: f.id, naam: f.naam, plaats: f.plaats, aantal, waardeC, topMarge };
+    return {
+      id: f.id,
+      naam: f.naam,
+      plaats: f.plaats,
+      adres: f.adres ?? null,
+      postcode: f.postcode ?? null,
+      type: f.type ?? null,
+      opent: f.opent ?? null,
+      aantal,
+      waardeC,
+      topMarge,
+    };
   });
 }
 
@@ -160,7 +179,7 @@ export async function getToestelDetail(
       supabase.from('voorraad').select('filiaal_id, aantal, wijkt_af_vms').eq('toestel_id', id),
       supabase.from('centraal_magazijn').select('aantal, eta_dagen').eq('toestel_id', id).maybeSingle(),
       supabase.from('verkoop_events').select('marge_c').eq('toestel_id', id),
-      supabase.from('filialen').select('id, naam, plaats').order('naam'),
+      supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent').order('naam'),
     ]);
   if (!t) return null;
 
