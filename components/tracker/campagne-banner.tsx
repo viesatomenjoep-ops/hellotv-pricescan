@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import Image from 'next/image';
 
 // Compacte campagne-strip met de actieve actie + verkoopdoelstellingen (voor de verkoper).
 export function CampagneBanner() {
@@ -6,8 +6,8 @@ export function CampagneBanner() {
   return (
     <div className="rounded-2xl border border-primary/40 bg-primary/10 p-3">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 shrink-0 text-foreground" strokeWidth={1.75} />
-        <p className="text-sm font-semibold">HelloTV OLED Weken · tot 20% korting</p>
+        <Image src="/hellotv-bubble.png" alt="helloTV" width={28} height={28} className="h-5 w-auto" />
+        <p className="text-sm font-semibold">OLED Weken · tot 20% korting</p>
         <span className="ml-auto text-xs text-muted-foreground">t/m zo 2 aug</span>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">

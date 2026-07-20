@@ -13,7 +13,6 @@ import {
   Bell,
   LayoutDashboard,
   Search,
-  TrendingUp,
   Users,
   Tv,
   Store,
@@ -61,7 +60,6 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/tracker/scan', label: 'Scan toestel', icon: ScanLine },
       { href: '/tracker/aanbevelingen', label: 'Aanbevelingen', icon: Lightbulb },
-      { href: '/tracker/verkopen', label: 'Verkopen', icon: TrendingUp },
       { href: '/tracker/verkopers', label: 'Verkopers', icon: Users },
     ],
   },

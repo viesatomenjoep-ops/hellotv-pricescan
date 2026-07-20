@@ -17,9 +17,9 @@ const db = createClient(url, key, { auth: { persistSession: false } });
 
 const PASSWORD = 'PriceScan!2026';
 const USERS: Array<{ email: string; role: 'admin' | 'sales' | 'warehouse'; name: string }> = [
-  { email: 'admin@hellotv.local', role: 'admin', name: 'Auke Admin' },
-  { email: 'sales@hellotv.local', role: 'sales', name: 'Sander Sales' },
-  { email: 'warehouse@hellotv.local', role: 'warehouse', name: 'Wietske Warehouse' },
+  { email: 'admin@hellotv.local', role: 'admin', name: 'Manager helloTV' },
+  { email: 'sales@hellotv.local', role: 'sales', name: 'Tom' },
+  { email: 'warehouse@hellotv.local', role: 'warehouse', name: 'Magazijn helloTV' },
 ];
 
 async function findUserId(email: string): Promise<string | undefined> {

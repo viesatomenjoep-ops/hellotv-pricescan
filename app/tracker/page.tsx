@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import { Tv, Boxes, TrendingUp, ListChecks } from 'lucide-react';
+import { Tv, Boxes, Tag, ListChecks } from 'lucide-react';
 import { getDashboard, getTarget } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { formatEuro } from '@/lib/pricing/margin';
 import { MargeGauge } from '@/components/tracker/marge-gauge';
 import { MargeStip } from '@/components/tracker/marge-stip';
@@ -21,9 +20,9 @@ export default async function TrackerDashboard() {
     { label: 'Toestellen', value: d.toestellen, icon: Tv, tint: 'bg-blue-100 text-blue-700' },
     { label: 'Voorraad', value: d.voorraadTotaal, icon: Boxes, tint: 'bg-teal-100 text-teal-700' },
     {
-      label: 'Open pipeline',
-      value: d.pipeline.lead + d.pipeline.offerte,
-      icon: TrendingUp,
+      label: 'Gem. ticket',
+      value: formatEuro(d.gemTicketC),
+      icon: Tag,
       tint: 'bg-amber-100 text-amber-700',
     },
     {
@@ -61,7 +60,7 @@ export default async function TrackerDashboard() {
 
       <MargeGauge target={target} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Beste marge vandaag</CardTitle>
@@ -81,23 +80,6 @@ export default async function TrackerDashboard() {
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Verkoop-pipeline</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {(['lead', 'offerte', 'verkocht', 'geleverd'] as const).map((s) => (
-              <div key={s} className="flex items-center justify-between">
-                <span className="capitalize">{s}</span>
-                <Badge variant="secondary">{d.pipeline[s]}</Badge>
-              </div>
-            ))}
-            <Link href="/tracker/verkopen" className="mt-2 block text-sm text-primary underline">
-              Naar de pipeline →
-            </Link>
           </CardContent>
         </Card>
       </div>

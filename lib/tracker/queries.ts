@@ -117,7 +117,7 @@ export async function getToestellenLijst(): Promise<ToestelRow[]> {
 export interface DashboardData {
   toestellen: number;
   voorraadTotaal: number;
-  pipeline: Record<string, number>;
+  gemTicketC: number;
   takenOpen: number;
   besteMarge: Array<{ id: number; model: string; merk: string; margePct: number; margeC: number }>;
 }
@@ -342,17 +342,15 @@ export async function getTarget(): Promise<TargetRow | null> {
 
 export async function getDashboard(): Promise<DashboardData> {
   const supabase = createClient();
-  const [{ data: toestellen }, { data: voorraad }, { data: verkopen }, { data: taken }] =
-    await Promise.all([
-      supabase.from('toestellen').select('id, merk, model, inkoop_c, ticket_c'),
-      // Pre-geaggregeerde totalen (view) i.p.v. ~5.700 losse voorraadregels sommeren.
-      supabase.from('v_toestel_voorraad').select('totaal'),
-      supabase.from('verkopen').select('status'),
-      supabase.from('taken').select('status'),
-    ]);
+  const [{ data: toestellen }, { data: voorraad }, { data: taken }] = await Promise.all([
+    supabase.from('toestellen').select('id, merk, model, inkoop_c, ticket_c'),
+    // Pre-geaggregeerde totalen (view) i.p.v. ~5.700 losse voorraadregels sommeren.
+    supabase.from('v_toestel_voorraad').select('totaal'),
+    supabase.from('taken').select('status'),
+  ]);
 
-  const pipeline: Record<string, number> = { lead: 0, offerte: 0, verkocht: 0, geleverd: 0 };
-  for (const v of verkopen ?? []) pipeline[v.status] = (pipeline[v.status] ?? 0) + 1;
+  const tickets = (toestellen ?? []).map((t) => t.ticket_c);
+  const gemTicketC = tickets.length ? Math.round(tickets.reduce((s, n) => s + n, 0) / tickets.length) : 0;
 
   const besteMarge = (toestellen ?? [])
     .map((t) => {
@@ -371,7 +369,7 @@ export async function getDashboard(): Promise<DashboardData> {
   return {
     toestellen: (toestellen ?? []).length,
     voorraadTotaal: (voorraad ?? []).reduce((s, r) => s + (r.totaal ?? 0), 0),
-    pipeline,
+    gemTicketC,
     takenOpen: (taken ?? []).filter((t) => t.status !== 'klaar').length,
     besteMarge,
   };

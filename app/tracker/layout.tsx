@@ -23,7 +23,11 @@ export default async function TrackerLayout({ children }: { children: React.Reac
 
   return (
     <FlagsProvider flags={flags} rol={rol}>
-      <TrackerShell userLabel={label} filiaal="helloTV Rotterdam" notificaties={notificaties ?? []}>
+      <TrackerShell
+        userLabel={label}
+        filiaal={`${rol === 'manager' ? 'manager' : 'sales'} · helloTV Breda`}
+        notificaties={notificaties ?? []}
+      >
         {children}
       </TrackerShell>
     </FlagsProvider>
