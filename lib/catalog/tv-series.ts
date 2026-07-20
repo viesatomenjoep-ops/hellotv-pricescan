@@ -72,9 +72,6 @@ const SAMSUNG: Serie[] = [
 const SONY: Serie[] = [
   // 2025
   { merk: 'Sony', familie: 'BRAVIA 8 II QD-OLED', panel: 'QD-OLED', jaar: 2025, segment: 'premium', pattern: 'K-{inch}XR80M2', sizes: [55, 65], anchors: [{ inch: 55, eur: 2999 }, { inch: 65, eur: 3699 }] },
-  { merk: 'Sony', familie: 'BRAVIA 9 Mini-LED', panel: 'Mini-LED', jaar: 2025, segment: 'premium', pattern: 'K-{inch}XR90', sizes: [65, 75, 85], anchors: [{ inch: 65, eur: 2299 }, { inch: 85, eur: 3799 }] },
-  { merk: 'Sony', familie: 'BRAVIA 8 OLED', panel: 'OLED', jaar: 2025, segment: 'premium', pattern: 'K-{inch}XR80', sizes: [55, 65, 77], anchors: [{ inch: 55, eur: 1599 }, { inch: 65, eur: 1999 }] },
-  { merk: 'Sony', familie: 'BRAVIA 7 Mini-LED', panel: 'Mini-LED', jaar: 2025, segment: 'mid', pattern: 'K-{inch}XR70', sizes: [55, 65, 75, 85], anchors: [{ inch: 55, eur: 1399 }, { inch: 65, eur: 1699 }] },
   { merk: 'Sony', familie: 'BRAVIA 5 Mini-LED', panel: 'Mini-LED', jaar: 2025, segment: 'mid', pattern: 'K-{inch}XR55B', sizes: [55, 65, 75, 85, 98], anchors: [{ inch: 55, eur: 1099 }, { inch: 65, eur: 1297 }] },
   { merk: 'Sony', familie: 'BRAVIA 3 LED', panel: 'LED', jaar: 2025, segment: 'budget', pattern: 'K-{inch}S35B', sizes: [43, 50, 55, 65, 75, 85], anchors: [{ inch: 43, eur: 599 }, { inch: 55, eur: 749 }] },
   // 2026
