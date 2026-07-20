@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatEuro } from '@/lib/pricing/margin';
+import { MargeStip } from '@/components/tracker/marge-stip';
 import type { ToestelRow } from '@/lib/tracker/queries';
 
 function margeTone(pct: number) {
@@ -72,15 +73,16 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
           <Link
             key={t.id}
             href={`/tracker/toestellen/${t.id}`}
-            className="flex items-center justify-between rounded-lg border bg-background p-3 hover:bg-muted"
+            className="flex items-center gap-3 rounded-xl border bg-card p-3 elev-1 hover:bg-muted/50"
           >
-            <div>
-              <p className="text-sm font-medium">{t.model}</p>
-              <p className="text-xs text-muted-foreground">
+            <MargeStip margePct={t.margePct} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{t.model}</p>
+              <p className="truncate text-xs text-muted-foreground">
                 {t.merk} · {t.type_nr} · {t.inch}&quot; · {t.klasse}
               </p>
             </div>
-            <div className="text-right text-sm">
+            <div className="shrink-0 text-right text-sm">
               <p className={`font-semibold ${margeTone(t.margePct)}`}>{t.margePct}%</p>
               <p className="text-xs text-muted-foreground">
                 {formatEuro(t.ticket_c)} · {t.voorraadTotaal} st

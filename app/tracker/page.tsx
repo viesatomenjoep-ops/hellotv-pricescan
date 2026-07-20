@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatEuro } from '@/lib/pricing/margin';
 import { MargeGauge } from '@/components/tracker/marge-gauge';
+import { MargeStip } from '@/components/tracker/marge-stip';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,12 +50,13 @@ export default async function TrackerDashboard() {
           <CardContent>
             <ul className="divide-y text-sm">
               {d.besteMarge.map((t) => (
-                <li key={t.id} className="flex items-center justify-between py-2">
-                  <Link href={`/tracker/toestellen/${t.id}`} className="hover:underline">
+                <li key={t.id} className="flex items-center gap-2 py-2">
+                  <MargeStip margePct={t.margePct} />
+                  <Link href={`/tracker/toestellen/${t.id}`} className="min-w-0 flex-1 truncate hover:underline">
                     {t.model}
                     <span className="ml-2 text-xs text-muted-foreground">{t.merk}</span>
                   </Link>
-                  <span className={`font-semibold ${margeTone(t.margePct)}`}>
+                  <span className={`shrink-0 font-semibold ${margeTone(t.margePct)}`}>
                     {formatEuro(t.margeC)} · {t.margePct}%
                   </span>
                 </li>

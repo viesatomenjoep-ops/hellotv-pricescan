@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatEuro } from '@/lib/pricing/margin';
 import { useFlag } from '@/components/tracker/flags-provider';
 import { FiliaalSelect } from '@/components/tracker/filiaal-select';
+import { MargeStip } from '@/components/tracker/marge-stip';
 import type { ToestelRow, Filiaal } from '@/lib/tracker/queries';
 import { vmsSyncAction } from './actions';
 
@@ -138,7 +139,9 @@ export function VoorraadClient({
                     {aantalVoor(t)}
                   </span>
                 </td>
-                <td className="p-2">{t.margePct}%</td>
+                <td className="p-2">
+                  <MargeStip margePct={t.margePct} showPct />
+                </td>
                 <td className="p-2">{formatEuro(t.ticket_c)}</td>
               </tr>
             ))}

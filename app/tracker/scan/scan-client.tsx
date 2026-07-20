@@ -14,6 +14,7 @@ import { isWebSerialSupported, startSerialScan } from '@/lib/rfid/serial-adapter
 import type { ScanData, ScanToestel } from '@/lib/tracker/scan-data';
 import { FiliaalSelect } from '@/components/tracker/filiaal-select';
 import { MargeRadar, margeVerdict, margeVibratie } from '@/components/tracker/marge-radar';
+import { MargeStip } from '@/components/tracker/marge-stip';
 import { DealExtras } from '@/components/tracker/deal-extras';
 import { gekozenExtras, type ExtraSelectie } from '@/lib/tracker/extras-catalog';
 import { koppelToestelTagAction } from './actions';
@@ -395,11 +396,12 @@ export function ScanClient({
               <button
                 key={t.id}
                 onClick={() => kies(t)}
-                className="flex items-center justify-between rounded-lg border bg-background p-3 text-left hover:bg-muted"
+                className="flex items-center gap-3 rounded-xl border bg-card p-3 text-left elev-1 hover:bg-muted/50"
               >
-                <span>
-                  <span className="block text-sm font-medium">{t.model}</span>
-                  <span className="block text-xs text-muted-foreground">
+                <MargeStip margePct={tvMargePct(t.ticket_c, t.inkoop_c)} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{t.model}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
                     {t.merk} · {t.inch}&quot; · {t.klasse}
                   </span>
                 </span>
