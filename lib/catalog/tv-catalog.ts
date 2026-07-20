@@ -85,7 +85,28 @@ function nettePrijs(eur: number): number {
 }
 
 // Geschatte marge per segment (TV-retail is dun); tot Vendit de echte inkoop levert.
-const MARGE: Record<Segment, number> = { budget: 0.09, mid: 0.13, premium: 0.17 };
+// Variabele marge per merk (ex. btw): elk model krijgt deterministisch een marge in dit bereik,
+// zodat de catalogus levendig/gevarieerd is voor de demo. Echte campagne-marges (REAL_MARGE) winnen.
+const MARGE_RANGE: Record<Merk, [number, number]> = {
+  TCL: [20, 40],
+  Philips: [22, 40],
+  Samsung: [18, 40],
+  LG: [18, 40],
+  Sony: [18, 40],
+};
+// Stabiele pseudo-random fractie 0..1 op basis van het typenummer (FNV-1a).
+function hashFrac(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 10000) / 10000;
+}
+function brandMargeFrac(merk: Merk, model_number: string): number {
+  const [lo, hi] = MARGE_RANGE[merk];
+  return (lo + hashFrac(model_number) * (hi - lo)) / 100;
+}
 
 const PANEL_KLASSE: Record<Panel, CatalogItem['klasse']> = {
   OLED: 'OLED',
@@ -117,7 +138,10 @@ export function buildCatalog(series: Serie[]): CatalogItem[] {
       const ticketEur = nettePrijs(prijsVoorMaat(s.anchors, inch));
       const ticket_c = Math.round(ticketEur * 100);
       // Marge% is ex. btw. Actie-marge uit REAL_MARGE, anders segment-schatting.
-      const margeFrac = REAL_MARGE[model_number] != null ? REAL_MARGE[model_number] / 100 : MARGE[s.segment];
+      const margeFrac =
+        REAL_MARGE[model_number] != null
+          ? REAL_MARGE[model_number] / 100
+          : brandMargeFrac(s.merk, model_number);
       const inkoop_c = Math.round(exVat(ticket_c) * (1 - margeFrac)); // ex. btw
       const min_marge_c = Math.round(inkoop_c * 1.21 * 1.03); // min verkoop incl. btw (+3%)
       items.push({
