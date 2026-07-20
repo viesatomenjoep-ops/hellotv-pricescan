@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatEuro } from '@/lib/pricing/margin';
 import type { VerkoopRow } from '@/lib/tracker/queries';
-import { advanceVerkoopAction } from './actions';
+import { setVerkoopStatusAction } from './actions';
 
 const FASES: Array<{ key: string; label: string }> = [
   { key: 'lead', label: 'Lead' },
@@ -14,17 +14,36 @@ const FASES: Array<{ key: string; label: string }> = [
   { key: 'verkocht', label: 'Verkocht' },
   { key: 'geleverd', label: 'Geleverd' },
 ];
+const VOLGORDE = FASES.map((f) => f.key);
 
 export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [items] = useState(verkopen);
+  const [items, setItems] = useState(verkopen);
+  const [sleep, setSleep] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+
+  function verplaats(id: string, status: string) {
+    const huidig = items.find((v) => v.id === id);
+    if (!huidig || huidig.status === status) return;
+    // optimistisch
+    const vorige = items;
+    setItems((xs) => xs.map((v) => (v.id === id ? { ...v, status } : v)));
+    start(async () => {
+      const res = await setVerkoopStatusAction(id, status);
+      if (!res.ok) {
+        setItems(vorige); // terugdraaien
+      } else {
+        router.refresh();
+      }
+    });
+  }
 
   function advance(id: string) {
-    start(async () => {
-      const res = await advanceVerkoopAction(id);
-      if (res.ok) router.refresh();
-    });
+    const huidig = items.find((v) => v.id === id);
+    if (!huidig) return;
+    const idx = VOLGORDE.indexOf(huidig.status);
+    verplaats(id, VOLGORDE[Math.min(idx + 1, VOLGORDE.length - 1)]);
   }
 
   const waarde = items.reduce((s, v) => s + v.waarde_c, 0);
@@ -37,17 +56,54 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
           {items.length} deals · {formatEuro(waarde)}
         </span>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Sleep een kaart naar een andere fase, of tik → op mobiel.
+      </p>
 
       <div className="grid gap-3 md:grid-cols-4">
         {FASES.map((f) => {
           const rows = items.filter((v) => v.status === f.key);
+          const kolomWaarde = rows.reduce((s, v) => s + v.waarde_c, 0);
+          const isOver = over === f.key;
           return (
-            <div key={f.key} className="space-y-2">
-              <p className="text-sm font-semibold">
-                {f.label} <span className="text-muted-foreground">({rows.length})</span>
-              </p>
+            <div
+              key={f.key}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOver(f.key);
+              }}
+              onDragLeave={() => setOver((o) => (o === f.key ? null : o))}
+              onDrop={(e) => {
+                e.preventDefault();
+                setOver(null);
+                const id = e.dataTransfer.getData('text/plain') || sleep;
+                if (id) verplaats(id, f.key);
+                setSleep(null);
+              }}
+              className={`space-y-2 rounded-lg p-1 transition-colors ${
+                isOver ? 'bg-primary/10 ring-2 ring-primary/40' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between px-1">
+                <p className="text-sm font-semibold">
+                  {f.label} <span className="text-muted-foreground">({rows.length})</span>
+                </p>
+                <span className="text-xs text-muted-foreground">{formatEuro(kolomWaarde)}</span>
+              </div>
               {rows.map((v) => (
-                <Card key={v.id}>
+                <Card
+                  key={v.id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', v.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    setSleep(v.id);
+                  }}
+                  onDragEnd={() => setSleep(null)}
+                  className={`cursor-grab active:cursor-grabbing ${
+                    sleep === v.id ? 'opacity-50' : ''
+                  }`}
+                >
                   <CardContent className="space-y-1 p-3">
                     <p className="text-sm font-medium">{v.model}</p>
                     <p className="text-xs text-muted-foreground">{v.klant}</p>
@@ -59,6 +115,7 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
                           variant="ghost"
                           onClick={() => advance(v.id)}
                           disabled={pending}
+                          aria-label="Volgende fase"
                         >
                           →
                         </Button>
@@ -69,7 +126,7 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
               ))}
               {rows.length === 0 && (
                 <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">
-                  Leeg
+                  Sleep hierheen
                 </p>
               )}
             </div>

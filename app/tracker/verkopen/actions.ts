@@ -16,3 +16,20 @@ export async function advanceVerkoopAction(
   if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
+
+// Zet een deal direct op een gekozen fase (drag&drop-kanban).
+export async function setVerkoopStatusAction(
+  id: string,
+  status: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!FASES.includes(status as (typeof FASES)[number])) {
+    return { ok: false, error: 'Onbekende fase' };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('verkopen')
+    .update({ status: status as (typeof FASES)[number] })
+    .eq('id', id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
