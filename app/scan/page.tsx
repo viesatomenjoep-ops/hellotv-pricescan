@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +19,7 @@ import { MarginBadge } from '@/components/badges/margin-badge';
 import { StockBadge } from '@/components/badges/stock-badge';
 import { formatEuro } from '@/lib/pricing/margin';
 import { useScanListener, type Scan } from '@/lib/rfid/use-scan-listener';
+import { isWebSerialSupported, startSerialScan } from '@/lib/rfid/serial-adapter';
 import type { ScanProduct, ScanResult, Alternative } from '@/lib/supabase/queries';
 import { scanAction, alternativesAction } from './actions';
 
@@ -59,6 +68,26 @@ export default function ScanPage() {
   const onScan = useCallback((scan: Scan) => runScan(scan.value), [runScan]);
   const { flash } = useScanListener({ enabled: true, onScan });
 
+  const [serialStop, setSerialStop] = useState<(() => void) | null>(null);
+  const serialRef = useRef<(() => void) | null>(null);
+  serialRef.current = serialStop;
+  useEffect(() => () => serialRef.current?.(), []);
+
+  async function toggleSerial() {
+    if (serialStop) {
+      serialStop();
+      setSerialStop(null);
+      return;
+    }
+    try {
+      const stop = await startSerialScan({ baudRate: 9600 }, onScan);
+      setSerialStop(() => stop);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Web Serial mislukt');
+    }
+  }
+
   function onManualSubmit(e: FormEvent) {
     e.preventDefault();
     runScan(input);
@@ -89,6 +118,12 @@ export default function ScanPage() {
           {pending ? 'Bezig…' : 'Zoek'}
         </Button>
       </form>
+
+      {isWebSerialSupported() && (
+        <Button variant="outline" size="sm" onClick={toggleSerial}>
+          {serialStop ? 'Web Serial stoppen' : 'Web Serial-reader verbinden'}
+        </Button>
+      )}
 
       {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
