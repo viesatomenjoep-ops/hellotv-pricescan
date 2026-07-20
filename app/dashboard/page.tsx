@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth';
-import { getDashboardData, getMarginByBrand } from '@/lib/supabase/reports';
+import { getDashboardData, getMarginByBrand, getRecentPriceChanges } from '@/lib/supabase/reports';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/stat-card';
 import { MarginBarChart } from '@/components/charts/margin-bar-chart';
+import { ChangesPerDayChart } from '@/components/charts/changes-per-day-chart';
 
 const BEHEER = [
   { href: '/beheer/matching', label: 'Matching-review' },
@@ -18,7 +19,33 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   await requireRole(['admin']);
-  const [data, marginByBrand] = await Promise.all([getDashboardData(), getMarginByBrand()]);
+  const [data, marginByBrand, changes] = await Promise.all([
+    getDashboardData(),
+    getMarginByBrand(),
+    getRecentPriceChanges(500),
+  ]);
+
+  // Wijzigingen per dag (30 dagen).
+  const perDayMap = new Map<string, number>();
+  for (const c of changes) {
+    const day = c.changed_at.slice(0, 10);
+    perDayMap.set(day, (perDayMap.get(day) ?? 0) + 1);
+  }
+  const perDay = Array.from(perDayMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date: date.slice(5), count }));
+
+  // Grootste marge-schadelijke wijzigingen deze week (inkoop omhoog of verkoop omlaag).
+  const weekAgo = Date.now() - 7 * 86_400_000;
+  const marginDrops = changes
+    .filter((c) => new Date(c.changed_at).getTime() >= weekAgo)
+    .filter(
+      (c) =>
+        (c.field === 'purchase' && (c.delta_pct ?? 0) > 0) ||
+        (c.field === 'sale' && (c.delta_pct ?? 0) < 0),
+    )
+    .sort((a, b) => Math.abs(b.delta_pct ?? 0) - Math.abs(a.delta_pct ?? 0))
+    .slice(0, 10);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6">
@@ -70,6 +97,42 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Prijswijzigingen per dag (30d)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {perDay.length > 0 ? (
+              <ChangesPerDayChart data={perDay} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Geen wijzigingen.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Grootste marge-dalingen (deze week)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1 text-sm">
+              {marginDrops.map((c) => (
+                <li key={c.id} className="flex justify-between">
+                  <span>{c.model_name}</span>
+                  <span className="text-muted-foreground">
+                    {c.field === 'purchase' ? 'inkoop ↑' : 'verkoop ↓'} {c.delta_pct}%
+                  </span>
+                </li>
+              ))}
+              {marginDrops.length === 0 && (
+                <li className="text-muted-foreground">Geen marge-dalingen deze week.</li>
+              )}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>

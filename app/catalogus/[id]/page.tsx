@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PriceBadge } from '@/components/badges/price-badge';
 import { MarginBadge } from '@/components/badges/margin-badge';
+import { PriceHistoryChart } from '@/components/charts/price-history-chart';
 import { formatEuro } from '@/lib/pricing/margin';
 
 export const dynamic = 'force-dynamic';
@@ -92,7 +93,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
         <CardHeader>
           <CardTitle className="text-base">Prijshistorie</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <PriceHistoryChart
+            history={detail.history}
+            currentPurchase={p.purchase_price_cents}
+            currentSale={showMargin ? p.sale_price_cents : null}
+          />
           <ul className="space-y-1 text-sm">
             {detail.history.map((h, i) => (
               <li key={i} className="flex justify-between">
