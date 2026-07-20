@@ -78,6 +78,14 @@ De demo-toestellen 1–4 delen hun EAN met PriceScan-producten (seed). Zo werkt 
 - [ ] Reader zonder Enter-suffix → scan finaliseert alsnog (idle-timeout).
 - [ ] Netwerk traag/uit → handmatige invoer + calculator blijven werken (Tracker is offline-first).
 
+## Geautomatiseerde tests
+
+- **Unit** (`pnpm test`): classificatie/normalisatie van EPC/EAN — 50 tests.
+- **E2E** (`pnpm e2e`): `e2e/scan.spec.ts` (PriceScan rol-gating) + `e2e/tracker-scan.spec.ts`
+  (Tracker-herkenning, onbekende chip koppelen, EAN-brug beide richtingen). Vereist de geseede
+  lokale stack: `pnpm db:start && pnpm db:seed && pnpm db:seed-users && pnpm db:seed-tracker`,
+  daarna `pnpm e2e`. Scannen wordt gesimuleerd via de handmatige invoervelden.
+
 ## Bekende grenzen
 
 - De EAN-brug spiegelt via de **service-role** op de server; hij is best-effort en faalt stil als

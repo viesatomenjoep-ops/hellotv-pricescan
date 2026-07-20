@@ -22,6 +22,7 @@ export function KoppelWizard({ initialEpc }: { initialEpc: string | null }) {
   const [tags, setTags] = useState<TagRow[]>([]);
   const [conflict, setConflict] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [handEpc, setHandEpc] = useState('');
   const pendingEpc = useRef<string | null>(initialEpc);
 
   const coupleOne = useCallback(async (epc: string, modelId: string) => {
@@ -162,6 +163,29 @@ export function KoppelWizard({ initialEpc }: { initialEpc: string | null }) {
             <div className="rounded-md bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Scan-modus aan · {tags.length} gekoppeld
             </div>
+
+            {/* Handmatige invoer (testen zonder reader). */}
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const epc = handEpc.trim();
+                if (!epc || !model) return;
+                setHandEpc('');
+                void coupleOne(epc, model.id);
+              }}
+            >
+              <Input
+                value={handEpc}
+                onChange={(e) => setHandEpc(e.target.value)}
+                placeholder="EPC handmatig…"
+                aria-label="EPC handmatig"
+                className="font-mono"
+              />
+              <Button type="submit" disabled={handEpc.trim() === ''}>
+                Koppel
+              </Button>
+            </form>
             {msg && <p className="text-sm font-medium text-destructive">{msg}</p>}
 
             {conflict && (
