@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useTransition, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { SignOutButton } from '@/components/sign-out-button';
 import { useFlag } from './flags-provider';
+import { markeerGelezenAction, markeerAllesGelezenAction } from '@/app/tracker/notificatie-actions';
 
 interface Notificatie {
   id: string;
@@ -99,10 +100,25 @@ export function TrackerShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const sections = useVisibleSections();
   const notifAan = useFlag('notificaties');
   const [notifOpen, setNotifOpen] = useState(false);
+  const [, startNotif] = useTransition();
   const ongelezen = notificaties.filter((n) => !n.gelezen).length;
+
+  function markeerGelezen(id: string) {
+    startNotif(async () => {
+      await markeerGelezenAction(id);
+      router.refresh();
+    });
+  }
+  function markeerAlles() {
+    startNotif(async () => {
+      await markeerAllesGelezenAction();
+      router.refresh();
+    });
+  }
   const isActive = (href: string) =>
     href === '/tracker' ? pathname === href : pathname.startsWith(href);
 
@@ -170,19 +186,35 @@ export function TrackerShell({
                 </button>
                 {notifOpen && (
                   <div className="absolute right-0 top-11 z-50 w-72 rounded-lg border bg-background p-2 shadow-lg">
+                    <div className="flex items-center justify-between px-1 pb-1">
+                      <span className="text-xs font-semibold text-muted-foreground">Notificaties</span>
+                      {ongelezen > 0 && (
+                        <button
+                          onClick={markeerAlles}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Alles gelezen
+                        </button>
+                      )}
+                    </div>
                     {notificaties.length === 0 && (
                       <p className="p-2 text-sm text-muted-foreground">Geen notificaties.</p>
                     )}
                     {notificaties.map((n) => (
-                      <div
+                      <button
                         key={n.id}
-                        className={cn('rounded-md p-2 text-sm', !n.gelezen && 'bg-muted/60')}
+                        onClick={() => !n.gelezen && markeerGelezen(n.id)}
+                        className={cn(
+                          'block w-full rounded-md p-2 text-left text-sm',
+                          !n.gelezen ? 'bg-muted/60 hover:bg-muted' : 'opacity-60',
+                        )}
                       >
                         <p>{n.tekst}</p>
                         <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                           {n.type}
+                          {!n.gelezen && ' · tik om te markeren'}
                         </p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
