@@ -1,29 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { isValidEan13 } from '@/lib/schemas';
-import { normalizeEpc } from './epc';
+import { classifyScan, type Scan, type ScanType } from './classify';
 
 // HID/keyboard-wedge scan-listener (E1). Herkent snelle toetsreeksen als scanner-invoer,
 // classificeert EAN-13 of EPC, debounced dubbele scans, en geeft geluid + flash-feedback.
 
-export type ScanType = 'rfid' | 'ean';
-export interface Scan {
-  type: ScanType;
-  value: string;
-}
+export type { Scan, ScanType };
 
 const MAX_INTERKEY_MS = 35; // sneller dan dit tussen tekens = scanner, geen mens
 const DEBOUNCE_MS = 3000; // zelfde waarde binnen 3s negeren
 const MIN_LENGTH = 8;
-
-function classify(raw: string): Scan | null {
-  const trimmed = raw.trim();
-  if (/^\d{13}$/.test(trimmed) && isValidEan13(trimmed)) return { type: 'ean', value: trimmed };
-  const epc = normalizeEpc(trimmed);
-  if (/^[0-9A-F]{16,32}$/.test(epc)) return { type: 'rfid', value: epc };
-  return null;
-}
+const IDLE_FINALIZE_MS = 120; // reader zonder Enter/Tab-suffix: finaliseer na deze stilte
 
 function beep(ok: boolean) {
   try {
@@ -57,18 +45,27 @@ export function useScanListener({
   const lastKey = useRef(0);
   const wasFast = useRef(true);
   const lastEmit = useRef<{ value: string; at: number }>({ value: '', at: 0 });
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
 
+    function clearIdle() {
+      if (idleTimer.current) {
+        clearTimeout(idleTimer.current);
+        idleTimer.current = null;
+      }
+    }
+
     function finalize() {
+      clearIdle();
       const raw = buffer.current;
       buffer.current = '';
       const fast = wasFast.current;
       wasFast.current = true;
       if (!fast || raw.length < MIN_LENGTH) return;
 
-      const scan = classify(raw);
+      const scan = classifyScan(raw);
       const now = Date.now();
       if (!scan) {
         beep(false);
@@ -101,10 +98,17 @@ export function useScanListener({
       }
       lastKey.current = now;
       buffer.current += e.key;
+
+      // Vangnet: readers zonder Enter/Tab-suffix finaliseren na korte stilte.
+      clearIdle();
+      idleTimer.current = setTimeout(finalize, IDLE_FINALIZE_MS);
     }
 
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      clearIdle();
+    };
   }, [enabled, onScan]);
 
   return { flash };
