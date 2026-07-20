@@ -29,7 +29,7 @@ export function FilialenView({ filialen }: { filialen: Filiaal[] }) {
               <Button
                 size="sm"
                 variant={weergave === 'lijst' ? 'default' : 'ghost'}
-                className="h-7 rounded-full px-3"
+                className="h-9 rounded-full px-4 md:h-7"
                 onClick={() => setWeergave('lijst')}
               >
                 Lijst
@@ -37,7 +37,7 @@ export function FilialenView({ filialen }: { filialen: Filiaal[] }) {
               <Button
                 size="sm"
                 variant={weergave === 'kaart' ? 'default' : 'ghost'}
-                className="h-7 rounded-full px-3"
+                className="h-9 rounded-full px-4 md:h-7"
                 onClick={() => setWeergave('kaart')}
               >
                 Kaart

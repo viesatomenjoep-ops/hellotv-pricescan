@@ -72,7 +72,7 @@ export function ScanLog({ events }: { events: ScanEventRow[] }) {
         <select
           value={result}
           onChange={(e) => setResult(e.target.value)}
-          className="h-9 rounded-md border bg-background px-2 text-sm"
+          className="h-10 rounded-md border bg-background px-2 text-sm md:h-9"
         >
           <option value="all">Alle resultaten</option>
           <option value="hit">hit</option>
@@ -82,7 +82,7 @@ export function ScanLog({ events }: { events: ScanEventRow[] }) {
         <select
           value={inputType}
           onChange={(e) => setInputType(e.target.value)}
-          className="h-9 rounded-md border bg-background px-2 text-sm"
+          className="h-10 rounded-md border bg-background px-2 text-sm md:h-9"
         >
           <option value="all">RFID + EAN</option>
           <option value="rfid">rfid</option>

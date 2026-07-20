@@ -528,7 +528,7 @@ export function ScanClient({
             <select
               value={filiaal}
               onChange={(e) => setFiliaal(e.target.value)}
-              className="h-8 rounded-md border bg-background px-2 text-xs"
+              className="h-10 rounded-md border bg-background px-2 text-sm md:h-8 md:text-xs"
             >
               {data.filialen.map((f) => (
                 <option key={f.id} value={f.id}>

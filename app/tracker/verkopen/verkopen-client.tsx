@@ -127,7 +127,7 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-9 px-2 text-muted-foreground"
+                          className="h-10 px-3 text-muted-foreground md:h-9"
                           onClick={() => terug(v.id)}
                           disabled={pending}
                           aria-label="Vorige fase"
@@ -139,7 +139,7 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-9 flex-1"
+                          className="h-10 flex-1 md:h-9"
                           onClick={() => advance(v.id)}
                           disabled={pending}
                         >

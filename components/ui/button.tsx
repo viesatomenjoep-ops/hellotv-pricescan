@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-semibold ring-offset-background transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex touch-manipulation select-none items-center justify-center whitespace-nowrap rounded-full text-sm font-semibold ring-offset-background transition-all active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -16,11 +16,12 @@ const buttonVariants = cva(
         ghost: 'hover:bg-muted',
         link: 'text-foreground underline-offset-4 hover:underline',
       },
+      // Mobiel eerst: ruime tikdoelen (≥40–44px), compacter vanaf md (desktop/muis).
       size: {
-        default: 'h-10 px-5 py-2',
-        sm: 'h-9 px-4',
-        lg: 'h-11 px-8',
-        icon: 'h-10 w-10',
+        default: 'h-11 px-5 py-2 md:h-10',
+        sm: 'h-10 px-4 md:h-9',
+        lg: 'h-12 px-8 md:h-11',
+        icon: 'h-11 w-11 md:h-10 md:w-10',
       },
     },
     defaultVariants: {

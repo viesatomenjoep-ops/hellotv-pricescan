@@ -145,7 +145,7 @@ function KoppelingKaart({
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               disabled={pending}
-              className="h-9 rounded-md border bg-background px-2 text-sm"
+              className="h-10 rounded-md border bg-background px-2 text-sm md:h-9"
             >
               <option value="verbonden">verbonden</option>
               <option value="niet-verbonden">niet-verbonden</option>
