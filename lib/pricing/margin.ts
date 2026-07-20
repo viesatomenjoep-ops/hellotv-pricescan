@@ -19,6 +19,21 @@ export function computeMargin(saleExclCents: number, purchaseCents: number): Mar
   return { marginCents, marginPct };
 }
 
+/** Tracker-marge: verkoop is incl. btw (ticket), inkoop is ex. btw. Marge% wordt ex-btw berekend
+ *  (zoals de echte inkooplijst): (verkoop_excl − inkoop) / verkoop_excl. */
+const TRACKER_VAT = 0.21;
+export function toestelMarge(
+  ticketInclCents: number,
+  inkoopExclCents: number,
+): { margeC: number; margePct: number } {
+  const ex = exclVat(ticketInclCents, TRACKER_VAT);
+  const { marginCents, marginPct } = computeMargin(ex, inkoopExclCents);
+  return {
+    margeC: marginCents,
+    margePct: marginPct != null ? Math.round(marginPct * 1000) / 10 : 0,
+  };
+}
+
 /** Centen → "€ 1.799,00" (nl-NL). */
 export function formatEuro(cents: number): string {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(cents / 100);

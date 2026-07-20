@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { toestelMarge } from '@/lib/pricing/margin';
 
 // Data-laag Sales Tracker. Bedragen in centen. Afgeleide marges in code (niet opgeslagen).
 
@@ -55,7 +56,7 @@ export async function getToestellenMetVoorraad(): Promise<{
 
   const rows: ToestelRow[] = (toestellen ?? []).map((t) => {
     const p = perToestel.get(t.id) ?? { v: {}, afw: false };
-    const margeC = t.ticket_c - t.inkoop_c;
+    const { margeC, margePct } = toestelMarge(t.ticket_c, t.inkoop_c);
     return {
       id: t.id,
       merk: t.merk,
@@ -72,7 +73,7 @@ export async function getToestellenMetVoorraad(): Promise<{
       voorraad: p.v,
       voorraadTotaal: Object.values(p.v).reduce((s, n) => s + n, 0),
       margeC,
-      margePct: t.ticket_c > 0 ? Math.round((margeC / t.ticket_c) * 1000) / 10 : 0,
+      margePct,
       wijktAfVms: p.afw,
     };
   });
@@ -90,7 +91,7 @@ export async function getToestellenLijst(): Promise<ToestelRow[]> {
   ]);
   const totaalMap = new Map((totalen ?? []).map((r) => [r.toestel_id, r.totaal ?? 0]));
   return (toestellen ?? []).map((t) => {
-    const margeC = t.ticket_c - t.inkoop_c;
+    const { margeC, margePct } = toestelMarge(t.ticket_c, t.inkoop_c);
     return {
       id: t.id,
       merk: t.merk,
@@ -107,7 +108,7 @@ export async function getToestellenLijst(): Promise<ToestelRow[]> {
       voorraad: {},
       voorraadTotaal: totaalMap.get(t.id) ?? 0,
       margeC,
-      margePct: t.ticket_c > 0 ? Math.round((margeC / t.ticket_c) * 1000) / 10 : 0,
+      margePct,
       wijktAfVms: false,
     };
   });
@@ -229,14 +230,14 @@ export async function getToestelDetail(
     v[r.filiaal_id] = r.aantal;
     if (r.wijkt_af_vms) afw = true;
   }
-  const margeC = t.ticket_c - t.inkoop_c;
+  const { margeC, margePct } = toestelMarge(t.ticket_c, t.inkoop_c);
   return {
     detail: {
       id: t.id, merk: t.merk, model: t.model, type_nr: t.type_nr, ean: t.ean, inch: t.inch,
       klasse: t.klasse, inkoop_c: t.inkoop_c, ticket_c: t.ticket_c, min_marge_c: t.min_marge_c,
       verkoopsnelheid: t.verkoopsnelheid ?? 0, specs: t.specs, voorraad: v,
       voorraadTotaal: Object.values(v).reduce((s, n) => s + n, 0),
-      margeC, margePct: t.ticket_c > 0 ? Math.round((margeC / t.ticket_c) * 1000) / 10 : 0,
+      margeC, margePct,
       wijktAfVms: afw,
       lifetimeMargeC: (events ?? []).reduce((s, e) => s + e.marge_c, 0),
       centraalAantal: centraal?.aantal ?? 0,
@@ -355,13 +356,13 @@ export async function getDashboard(): Promise<DashboardData> {
 
   const besteMarge = (toestellen ?? [])
     .map((t) => {
-      const margeC = t.ticket_c - t.inkoop_c;
+      const { margeC, margePct } = toestelMarge(t.ticket_c, t.inkoop_c);
       return {
         id: t.id,
         model: t.model,
         merk: t.merk,
         margeC,
-        margePct: t.ticket_c > 0 ? Math.round((margeC / t.ticket_c) * 1000) / 10 : 0,
+        margePct,
       };
     })
     .sort((a, b) => b.margePct - a.margePct)

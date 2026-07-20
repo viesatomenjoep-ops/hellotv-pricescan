@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatEuro } from '@/lib/pricing/margin';
 import { MargeRadar } from '@/components/tracker/marge-radar';
+import { CASHBACK_BY_MODELNR } from '@/lib/catalog/real-prices';
 import { TicketEditor } from './ticket-editor';
 
 export const dynamic = 'force-dynamic';
@@ -43,16 +44,23 @@ export default async function ToestelDetailPage({ params }: { params: { id: stri
             <CardTitle className="text-base">Prijs &amp; marge</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row l="Inkoop">{formatEuro(t.inkoop_c)}</Row>
+            <Row l="Inkoop (ex. btw)">{formatEuro(t.inkoop_c)}</Row>
             <Row l="Ticketprijs">
               <TicketEditor id={t.id} ticketC={t.ticket_c} />
             </Row>
             <Row l="Min-marge prijs">{formatEuro(t.min_marge_c)}</Row>
-            <Row l="Marge">
+            <Row l="Marge (ex. btw)">
               <span className={margeTone(t.margePct)}>
                 {formatEuro(t.margeC)} · {t.margePct}%
               </span>
             </Row>
+            {(CASHBACK_BY_MODELNR[t.type_nr] ?? 0) > 0 && (
+              <Row l="Cashback">
+                <span className="font-semibold text-green-700">
+                  {formatEuro(CASHBACK_BY_MODELNR[t.type_nr])}
+                </span>
+              </Row>
+            )}
             <Row l="Lifetime-marge">{formatEuro(t.lifetimeMargeC)}</Row>
             <Row l="Verkoopsnelheid">{t.verkoopsnelheid}/10</Row>
           </CardContent>

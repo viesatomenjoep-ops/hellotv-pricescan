@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatEuro } from '@/lib/pricing/margin';
+import { formatEuro, toestelMarge } from '@/lib/pricing/margin';
 import { useFlag } from '@/components/tracker/flags-provider';
 import { useScanListener } from '@/lib/rfid/use-scan-listener';
 import { classifyScan, type Scan } from '@/lib/rfid/classify';
@@ -17,6 +17,8 @@ import { MargeRadar, margeVerdict, margeVibratie } from '@/components/tracker/ma
 import { MargeStip } from '@/components/tracker/marge-stip';
 import { DealExtras } from '@/components/tracker/deal-extras';
 import { gekozenExtras, type ExtraSelectie } from '@/lib/tracker/extras-catalog';
+import { CASHBACK_BY_MODELNR } from '@/lib/catalog/real-prices';
+import { CampagneBanner } from '@/components/tracker/campagne-banner';
 import { koppelToestelTagAction } from './actions';
 import { AanbiedingSheet } from './aanbieding-sheet';
 
@@ -32,7 +34,7 @@ function margeTone(pct: number) {
 }
 
 const tvMargePct = (ticket_c: number, inkoop_c: number) =>
-  ticket_c > 0 ? ((ticket_c - inkoop_c) / ticket_c) * 100 : 0;
+  toestelMarge(ticket_c, inkoop_c).margePct;
 const KLASSE_KLEUR: Record<string, string> = {
   OLED: 'bg-[#EFEAF7] text-[#6B4EAA]',
   QLED: 'bg-[#E4EEFA] text-[#2563B8]',
@@ -204,8 +206,7 @@ export function ScanClient({
 
   const calc = useMemo(() => {
     if (!selected) return null;
-    const basisMarge = dealPrice - selected.inkoop_c;
-    const margePct = dealPrice > 0 ? (basisMarge / dealPrice) * 100 : 0;
+    const { margeC: basisMarge, margePct } = toestelMarge(dealPrice, selected.inkoop_c);
     const speling = dealPrice - selected.min_marge_c;
     const korting =
       selected.ticket_c > 0 ? ((selected.ticket_c - dealPrice) / selected.ticket_c) * 100 : 0;
@@ -228,15 +229,14 @@ export function ScanClient({
       .filter((t) => t.klasse === selected.klasse && t.id !== selected.id && t.voorraadTotaal > 0)
       .map((t) => ({
         ...t,
-        margePct: t.ticket_c > 0 ? ((t.ticket_c - t.inkoop_c) / t.ticket_c) * 100 : 0,
+        margePct: toestelMarge(t.ticket_c, t.inkoop_c).margePct,
       }))
       .sort((a, b) => b.margePct - a.margePct)
       .slice(0, 3);
   }, [selected, data.toestellen]);
 
   // Marge-radar + slimme alternatieven op marge (deze maat, prijsrange, maat kleiner).
-  const margePctVan = (t: ScanToestel) =>
-    t.ticket_c > 0 ? ((t.ticket_c - t.inkoop_c) / t.ticket_c) * 100 : 0;
+  const margePctVan = (t: ScanToestel) => toestelMarge(t.ticket_c, t.inkoop_c).margePct;
 
   const slim = useMemo(() => {
     if (!selected) return null;
@@ -276,6 +276,7 @@ export function ScanClient({
     return (
       <div className="mx-auto max-w-2xl space-y-6 p-4 sm:p-6">
         <h1 className="text-2xl font-bold tracking-tight">Scan toestel</h1>
+        <CampagneBanner />
 
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
@@ -431,6 +432,11 @@ export function ScanClient({
         <span className="text-sm text-muted-foreground">
           {selected.merk} · {selected.type_nr} · {selected.inch}&quot;
         </span>
+        {(CASHBACK_BY_MODELNR[selected.type_nr] ?? 0) > 0 && (
+          <Badge className="bg-green-100 text-green-800">
+            {formatEuro(CASHBACK_BY_MODELNR[selected.type_nr])} cashback
+          </Badge>
+        )}
         {privacyscherm && (
           <div className="ml-auto flex rounded-full border p-0.5 text-xs">
             <button
@@ -451,7 +457,10 @@ export function ScanClient({
 
       {/* Marge-radar — eerste, glanceable signaal na de scan (alleen verkoper) */}
       {!klantView && slim && (
-        <MargeRadar margePct={slim.eigenMarge} margeC={selected.ticket_c - selected.inkoop_c} />
+        <MargeRadar
+          margePct={slim.eigenMarge}
+          margeC={toestelMarge(selected.ticket_c, selected.inkoop_c).margeC}
+        />
       )}
 
       {/* Slimme alternatieven op marge */}

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatEuro } from '@/lib/pricing/margin';
 import { MargeGauge } from '@/components/tracker/marge-gauge';
 import { MargeStip } from '@/components/tracker/marge-stip';
+import { CampagneBanner } from '@/components/tracker/campagne-banner';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,8 @@ export default async function TrackerDashboard() {
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Overzicht van je vloer vandaag.</p>
       </div>
+
+      <CampagneBanner />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {kpis.map((k) => (

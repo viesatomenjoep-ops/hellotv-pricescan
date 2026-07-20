@@ -6,6 +6,8 @@
 // gezet tot de Vendit-sync ze overschrijft. De EAN's hier zijn geldige (checksum-correcte)
 // placeholder-EAN-13's, deterministisch per model, zodat matching/koppelen alvast werkt.
 
+import { REAL_MODELLEN, VERVANG_FAMILIES, REAL_MARGE } from './real-prices';
+
 export type Panel = 'OLED' | 'QD-OLED' | 'QLED' | 'Mini-LED' | 'LED';
 export type Segment = 'budget' | 'mid' | 'premium';
 export type Merk = 'Samsung' | 'LG' | 'Sony' | 'Philips' | 'TCL';
@@ -38,9 +40,10 @@ export interface CatalogItem {
   klasse: 'OLED' | 'QLED' | 'Mini-LED' | 'LED'; // tracker-klasse (QD-OLED→OLED)
   segment: Segment;
   status: 'active' | 'eol';
-  inkoop_c: number;
-  ticket_c: number;
+  inkoop_c: number; // ex. btw
+  ticket_c: number; // incl. btw
   min_marge_c: number;
+  cashback_c: number; // €-cashback (campagne), 0 = geen
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -105,13 +108,18 @@ const MERK_SLUG: Record<Merk, string> = {
 export function buildCatalog(series: Serie[]): CatalogItem[] {
   const items: CatalogItem[] = [];
   let seq = 1;
+  const exVat = (inclCents: number) => Math.round(inclCents / 1.21);
   for (const s of series) {
+    // Sla series over die door echte campagne-data worden vervangen.
+    if (VERVANG_FAMILIES.has(`${s.merk}|${s.familie}`)) continue;
     for (const inch of s.sizes) {
       const model_number = s.pattern.replace('{inch}', String(inch));
       const ticketEur = nettePrijs(prijsVoorMaat(s.anchors, inch));
       const ticket_c = Math.round(ticketEur * 100);
-      const inkoop_c = Math.round(ticket_c * (1 - MARGE[s.segment]));
-      const min_marge_c = Math.round(inkoop_c * 1.03); // 3% minimummarge
+      // Marge% is ex. btw. Actie-marge uit REAL_MARGE, anders segment-schatting.
+      const margeFrac = REAL_MARGE[model_number] != null ? REAL_MARGE[model_number] / 100 : MARGE[s.segment];
+      const inkoop_c = Math.round(exVat(ticket_c) * (1 - margeFrac)); // ex. btw
+      const min_marge_c = Math.round(inkoop_c * 1.21 * 1.03); // min verkoop incl. btw (+3%)
       items.push({
         key: `${MERK_SLUG[s.merk]}-${model_number.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
         merk: s.merk,
@@ -128,8 +136,13 @@ export function buildCatalog(series: Serie[]): CatalogItem[] {
         inkoop_c,
         ticket_c,
         min_marge_c,
+        cashback_c: 0,
       });
     }
+  }
+  // Echte campagne-modellen (met echte inkoop + cashback) toevoegen; EAN's toewijzen.
+  for (const r of REAL_MODELLEN) {
+    items.push({ ...r, ean: genEan(seq++) });
   }
   return items;
 }
