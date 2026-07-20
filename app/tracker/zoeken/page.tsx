@@ -1,5 +1,9 @@
-import { Placeholder } from '@/components/tracker/placeholder';
+import { getToestellenMetVoorraad } from '@/lib/tracker/queries';
+import { ZoekenClient } from './zoeken-client';
 
-export default function Page() {
-  return <Placeholder title="Zoeken" />;
+export const dynamic = 'force-dynamic';
+
+export default async function ZoekenPage() {
+  const { toestellen } = await getToestellenMetVoorraad();
+  return <ZoekenClient toestellen={toestellen} />;
 }

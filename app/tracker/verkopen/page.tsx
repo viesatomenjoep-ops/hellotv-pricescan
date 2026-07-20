@@ -1,5 +1,9 @@
-import { Placeholder } from '@/components/tracker/placeholder';
+import { getVerkopen } from '@/lib/tracker/queries';
+import { VerkopenClient } from './verkopen-client';
 
-export default function Page() {
-  return <Placeholder title="Verkopen" />;
+export const dynamic = 'force-dynamic';
+
+export default async function VerkopenPage() {
+  const verkopen = await getVerkopen();
+  return <VerkopenClient verkopen={verkopen} />;
 }

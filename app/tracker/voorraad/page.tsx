@@ -1,5 +1,9 @@
-import { Placeholder } from '@/components/tracker/placeholder';
+import { getToestellenMetVoorraad } from '@/lib/tracker/queries';
+import { VoorraadClient } from './voorraad-client';
 
-export default function Page() {
-  return <Placeholder title="Voorraad" />;
+export const dynamic = 'force-dynamic';
+
+export default async function VoorraadPage() {
+  const { toestellen, filialen } = await getToestellenMetVoorraad();
+  return <VoorraadClient toestellen={toestellen} filialen={filialen} />;
 }
