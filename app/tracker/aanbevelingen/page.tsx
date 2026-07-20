@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Trophy } from 'lucide-react';
-import { getToestellenMetVoorraad } from '@/lib/tracker/queries';
+import { getToestellenLijst } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -14,7 +14,7 @@ function score(t: { margePct: number; verkoopsnelheid: number; voorraadTotaal: n
 }
 
 export default async function AanbevelingenPage() {
-  const { toestellen } = await getToestellenMetVoorraad();
+  const toestellen = await getToestellenLijst();
   const scored = toestellen
     .map((t) => ({ ...t, score: score(t) }))
     .sort((a, b) => b.score - a.score);

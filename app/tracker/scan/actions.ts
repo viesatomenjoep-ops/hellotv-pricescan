@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { epcSchema } from '@/lib/schemas';
 import { bridgeFromTracker } from '@/lib/rfid/bridge';
@@ -19,6 +20,7 @@ export async function koppelToestelTagAction(
     .upsert({ epc, toestel_id: toestelId, status: 'active', linked_at: new Date().toISOString() });
   if (error) return { ok: false, error: error.message };
   await bridgeFromTracker(epc, toestelId); // EAN-brug → PriceScan
+  revalidateTag('tracker-catalog'); // scan-data-cache verversen
   return { ok: true, epc };
 }
 

@@ -1,9 +1,9 @@
-import { getToestellenMetVoorraad } from '@/lib/tracker/queries';
+import { getToestellenLijst } from '@/lib/tracker/queries';
 import { ZoekenClient } from './zoeken-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ZoekenPage() {
-  const { toestellen } = await getToestellenMetVoorraad();
+  const toestellen = await getToestellenLijst();
   return <ZoekenClient toestellen={toestellen} />;
 }

@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionUser } from '@/lib/auth';
 
@@ -16,5 +16,6 @@ export async function updateTicketAction(
   const { error } = await supabase.from('toestellen').update({ ticket_c: Math.round(ticketC) }).eq('id', id);
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/tracker/toestellen/${id}`);
+  revalidateTag('tracker-catalog'); // scan-data-cache verversen
   return { ok: true };
 }

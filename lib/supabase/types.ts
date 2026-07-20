@@ -1350,6 +1350,13 @@ export type Database = {
       };
     };
     Views: {
+      v_toestel_voorraad: {
+        Row: {
+          toestel_id: number | null;
+          totaal: number | null;
+        };
+        Relationships: [];
+      };
       v_margin_watchlist: {
         Row: {
           brand_name: string | null;

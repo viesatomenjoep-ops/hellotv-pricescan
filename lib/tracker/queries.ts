@@ -40,7 +40,7 @@ export async function getToestellenMetVoorraad(): Promise<{
 }> {
   const supabase = createClient();
   const [{ data: toestellen }, { data: voorraad }, { data: filialen }] = await Promise.all([
-    supabase.from('toestellen').select('*'),
+    supabase.from('toestellen').select('id, merk, model, type_nr, ean, inch, klasse, inkoop_c, ticket_c, min_marge_c, verkoopsnelheid, specs'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal, wijkt_af_vms'),
     supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent, lat, lng').order('naam'),
   ]);
@@ -77,6 +77,40 @@ export async function getToestellenMetVoorraad(): Promise<{
     };
   });
   return { toestellen: rows, filialen: filialen ?? [] };
+}
+
+// Lichte variant voor de toestellen-lijst: alleen totalen (view) i.p.v. alle voorraadregels.
+export async function getToestellenLijst(): Promise<ToestelRow[]> {
+  const supabase = createClient();
+  const [{ data: toestellen }, { data: totalen }] = await Promise.all([
+    supabase.from('toestellen').select(
+      'id, merk, model, type_nr, ean, inch, klasse, inkoop_c, ticket_c, min_marge_c, verkoopsnelheid, specs',
+    ),
+    supabase.from('v_toestel_voorraad').select('toestel_id, totaal'),
+  ]);
+  const totaalMap = new Map((totalen ?? []).map((r) => [r.toestel_id, r.totaal ?? 0]));
+  return (toestellen ?? []).map((t) => {
+    const margeC = t.ticket_c - t.inkoop_c;
+    return {
+      id: t.id,
+      merk: t.merk,
+      model: t.model,
+      type_nr: t.type_nr,
+      ean: t.ean,
+      inch: t.inch,
+      klasse: t.klasse,
+      inkoop_c: t.inkoop_c,
+      ticket_c: t.ticket_c,
+      min_marge_c: t.min_marge_c,
+      verkoopsnelheid: t.verkoopsnelheid ?? 0,
+      specs: t.specs,
+      voorraad: {},
+      voorraadTotaal: totaalMap.get(t.id) ?? 0,
+      margeC,
+      margePct: t.ticket_c > 0 ? Math.round((margeC / t.ticket_c) * 1000) / 10 : 0,
+      wijktAfVms: false,
+    };
+  });
 }
 
 export interface DashboardData {
@@ -181,7 +215,7 @@ export async function getToestelDetail(
   const supabase = createClient();
   const [{ data: t }, { data: voorraad }, { data: centraal }, { data: events }, { data: filialen }] =
     await Promise.all([
-      supabase.from('toestellen').select('*').eq('id', id).maybeSingle(),
+      supabase.from('toestellen').select('id, merk, model, type_nr, ean, inch, klasse, inkoop_c, ticket_c, min_marge_c, verkoopsnelheid, specs').eq('id', id).maybeSingle(),
       supabase.from('voorraad').select('filiaal_id, aantal, wijkt_af_vms').eq('toestel_id', id),
       supabase.from('centraal_magazijn').select('aantal, eta_dagen').eq('toestel_id', id).maybeSingle(),
       supabase.from('verkoop_events').select('marge_c').eq('toestel_id', id),
@@ -310,7 +344,8 @@ export async function getDashboard(): Promise<DashboardData> {
   const [{ data: toestellen }, { data: voorraad }, { data: verkopen }, { data: taken }] =
     await Promise.all([
       supabase.from('toestellen').select('id, merk, model, inkoop_c, ticket_c'),
-      supabase.from('voorraad').select('aantal'),
+      // Pre-geaggregeerde totalen (view) i.p.v. ~5.700 losse voorraadregels sommeren.
+      supabase.from('v_toestel_voorraad').select('totaal'),
       supabase.from('verkopen').select('status'),
       supabase.from('taken').select('status'),
     ]);
@@ -334,7 +369,7 @@ export async function getDashboard(): Promise<DashboardData> {
 
   return {
     toestellen: (toestellen ?? []).length,
-    voorraadTotaal: (voorraad ?? []).reduce((s, r) => s + (r.aantal ?? 0), 0),
+    voorraadTotaal: (voorraad ?? []).reduce((s, r) => s + (r.totaal ?? 0), 0),
     pipeline,
     takenOpen: (taken ?? []).filter((t) => t.status !== 'klaar').length,
     besteMarge,

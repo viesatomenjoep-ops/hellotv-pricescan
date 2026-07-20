@@ -1,5 +1,6 @@
 import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // Data voor het scan-scherm. Alles vooraf ophalen (klein datamodel) zodat de calculator
 // client-side snel is en offline werkt (PWA-doel).
@@ -46,8 +47,18 @@ export interface ScanData {
   tags: Array<{ epc: string; toestel_id: number }>;
 }
 
-export async function getScanData(): Promise<ScanData> {
-  const supabase = createClient();
+// Scan-data is voor alle gebruikers gelijk (permissieve RLS) en verandert weinig, dus 30s cachen.
+// Tag-invalidatie ('tracker-catalog') bij chip-koppelen/prijswijziging houdt het vers.
+export const getScanData = unstable_cache(
+  async (): Promise<ScanData> => {
+    return buildScanData();
+  },
+  ['tracker-scan-data'],
+  { revalidate: 30, tags: ['tracker-catalog'] },
+);
+
+async function buildScanData(): Promise<ScanData> {
+  const supabase = createAdminClient();
   const [
     { data: toestellen },
     { data: voorraad },
@@ -58,7 +69,7 @@ export async function getScanData(): Promise<ScanData> {
     { data: klanten },
     { data: tags },
   ] = await Promise.all([
-    supabase.from('toestellen').select('*'),
+    supabase.from('toestellen').select('id, merk, model, type_nr, ean, inch, klasse, inkoop_c, ticket_c, min_marge_c, verkoopsnelheid, specs'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal'),
     supabase.from('centraal_magazijn').select('toestel_id, aantal, eta_dagen'),
     supabase.from('verkoop_events').select('toestel_id, marge_c'),
