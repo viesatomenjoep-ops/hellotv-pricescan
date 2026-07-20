@@ -4,7 +4,7 @@ import { getToestelDetail } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatEuro } from '@/lib/pricing/margin';
+import { formatEuro, adviesPrijs } from '@/lib/pricing/margin';
 import { MargeRadar } from '@/components/tracker/marge-radar';
 import { CASHBACK_BY_MODELNR } from '@/lib/catalog/real-prices';
 import { TicketEditor } from './ticket-editor';
@@ -44,6 +44,11 @@ export default async function ToestelDetailPage({ params }: { params: { id: stri
             <CardTitle className="text-base">Prijs &amp; marge</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <Row l="Adviesprijs">
+              <span className="text-muted-foreground line-through">
+                {formatEuro(adviesPrijs(t.ticket_c, t.type_nr))}
+              </span>
+            </Row>
             <Row l="Inkoop (ex. btw)">{formatEuro(t.inkoop_c)}</Row>
             <Row l="Ticketprijs">
               <TicketEditor id={t.id} ticketC={t.ticket_c} />

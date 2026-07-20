@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatEuro, toestelMarge } from '@/lib/pricing/margin';
+import { formatEuro, toestelMarge, adviesPrijs } from '@/lib/pricing/margin';
 import { useFlag } from '@/components/tracker/flags-provider';
 import { useScanListener } from '@/lib/rfid/use-scan-listener';
 import { classifyScan, type Scan } from '@/lib/rfid/classify';
@@ -517,8 +517,12 @@ export function ScanClient({
             <p className="text-3xl font-bold">
               {formatEuro(calc?.totaalPrijs ?? dealPrice)}
               <span className="ml-2 text-base font-normal text-muted-foreground line-through">
-                {formatEuro(selected.ticket_c)}
+                {formatEuro(adviesPrijs(selected.ticket_c, selected.type_nr))}
               </span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Adviesprijs {formatEuro(adviesPrijs(selected.ticket_c, selected.type_nr))} · ticketprijs{' '}
+              {formatEuro(selected.ticket_c)}
             </p>
             {serviceAan && (
               <ul className="grid grid-cols-2 gap-1 pt-2 text-sm">

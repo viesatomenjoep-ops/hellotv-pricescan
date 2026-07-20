@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatEuro } from '@/lib/pricing/margin';
+import { formatEuro, adviesPrijs } from '@/lib/pricing/margin';
 import { MargeStip } from '@/components/tracker/marge-stip';
 import type { ToestelRow } from '@/lib/tracker/queries';
 
@@ -112,9 +112,13 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
             </div>
             <div className="shrink-0 text-right text-sm">
               <p className={`font-semibold ${margeTone(t.margePct)}`}>{t.margePct}%</p>
-              <p className="text-xs text-muted-foreground">
-                {formatEuro(t.ticket_c)} · {t.voorraadTotaal} st
+              <p className="text-xs">
+                <span className="text-muted-foreground line-through">
+                  {formatEuro(adviesPrijs(t.ticket_c, t.type_nr))}
+                </span>{' '}
+                <span className="font-medium">{formatEuro(t.ticket_c)}</span>
               </p>
+              <p className="text-[11px] text-muted-foreground">{t.voorraadTotaal} st</p>
             </div>
           </Link>
         ))}

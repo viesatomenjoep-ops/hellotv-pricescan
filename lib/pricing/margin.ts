@@ -34,6 +34,18 @@ export function toestelMarge(
   };
 }
 
+/** Adviesprijs (RRP) afgeleid uit de ticketprijs: de ticketprijs (echte verkoop) is 8–20%
+ *  goedkoper dan de adviesprijs, variabel per model. advies = ticket / (1 − korting). */
+export function adviesPrijs(ticketCents: number, seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const korting = 0.08 + (((h >>> 0) % 1000) / 1000) * 0.12; // 8..20%
+  return Math.round(ticketCents / (1 - korting));
+}
+
 /** Centen → "€ 1.799,00" (nl-NL). */
 export function formatEuro(cents: number): string {
   return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(cents / 100);
