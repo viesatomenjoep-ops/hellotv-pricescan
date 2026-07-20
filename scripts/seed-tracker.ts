@@ -587,6 +587,17 @@ async function main() {
     { soort: 'drive', status: 'niet-verbonden', config_json: {} },
   ]);
 
+  // Voorbeeld-RFID-chips gekoppeld aan de eerste toestellen (voor demo/handmatig testen).
+  // Vervang deze door je eigen chip-EPC's zodra je die inscant.
+  await ins(
+    'toestel_tags',
+    TOESTELLEN.slice(0, 4).map((t, i) => ({
+      epc: `E2801170000002000000A0${(i + 1).toString(16).toUpperCase().padStart(2, '0')}`,
+      toestel_id: t.id,
+      status: 'active',
+    })),
+  );
+
   await report();
 }
 

@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatEuro } from '@/lib/pricing/margin';
 import { useFlag } from '@/components/tracker/flags-provider';
+import { useScanListener } from '@/lib/rfid/use-scan-listener';
+import { classifyScan, type Scan } from '@/lib/rfid/classify';
+import { isWebSerialSupported, startSerialScan } from '@/lib/rfid/serial-adapter';
 import type { ScanData, ScanToestel } from '@/lib/tracker/scan-data';
+import { koppelToestelTagAction } from './actions';
 import { AanbiedingSheet } from './aanbieding-sheet';
 
 const SERVICE = [
@@ -49,12 +53,110 @@ export function ScanClient({
   const [filiaal, setFiliaal] = useState(data.filialen[0]?.id ?? '');
   const [sheet, setSheet] = useState(false);
 
-  function kies(t: ScanToestel) {
+  // Chip-koppelingen: start met server-data, groeit lokaal bij nieuwe koppelingen.
+  const [tags, setTags] = useState(() => new Map(data.tags.map((t) => [t.epc, t.toestel_id])));
+  const [scanMsg, setScanMsg] = useState<{ tone: 'ok' | 'warn' | 'error'; text: string } | null>(
+    null,
+  );
+  const [pendingEpc, setPendingEpc] = useState<string | null>(null);
+  const [handmatig, setHandmatig] = useState('');
+  const [zoekKoppel, setZoekKoppel] = useState('');
+  const [serialStop, setSerialStop] = useState<(() => void) | null>(null);
+  const toestelById = useMemo(
+    () => new Map(data.toestellen.map((t) => [t.id, t])),
+    [data.toestellen],
+  );
+  const eanIndex = useMemo(() => {
+    const m = new Map<string, ScanToestel>();
+    for (const t of data.toestellen) if (t.ean) m.set(t.ean.trim(), t);
+    return m;
+  }, [data.toestellen]);
+
+  const kies = useCallback((t: ScanToestel) => {
     setSelected(t);
     setDealPrice(t.ticket_c);
     setExtras(new Set());
     setKlantView(false);
     setSheet(false);
+    setPendingEpc(null);
+  }, []);
+
+  // Verwerk een binnengekomen scan (HID, Web Serial of handmatig).
+  const verwerkScan = useCallback(
+    (scan: Scan) => {
+      if (scan.type === 'ean') {
+        const t = eanIndex.get(scan.value);
+        if (t) {
+          setScanMsg({ tone: 'ok', text: `Herkend via barcode: ${t.model}` });
+          kies(t);
+        } else {
+          setScanMsg({ tone: 'error', text: `Geen toestel met barcode ${scan.value}` });
+        }
+        return;
+      }
+      // rfid/epc
+      const id = tags.get(scan.value);
+      const t = id != null ? toestelById.get(id) : undefined;
+      if (t) {
+        setScanMsg({ tone: 'ok', text: `Chip herkend: ${t.model}` });
+        kies(t);
+      } else {
+        setPendingEpc(scan.value);
+        setScanMsg({
+          tone: 'warn',
+          text: `Onbekende chip ${scan.value} — koppel hem aan een toestel.`,
+        });
+      }
+    },
+    [eanIndex, tags, toestelById, kies],
+  );
+
+  const onScan = useCallback((scan: Scan) => verwerkScan(scan), [verwerkScan]);
+  const { flash } = useScanListener({ enabled: !selected, onScan });
+
+  // Handmatige invoer (typen/plakken van EPC of EAN) — cruciaal om te testen zonder reader.
+  function handmatigZoek() {
+    const scan = classifyScan(handmatig);
+    if (!scan) {
+      setScanMsg({ tone: 'error', text: 'Ongeldige code (verwacht EAN-13 of 16–32 hex EPC).' });
+      return;
+    }
+    setHandmatig('');
+    verwerkScan(scan);
+  }
+
+  async function koppelPending(toestelId: number) {
+    if (!pendingEpc) return;
+    const res = await koppelToestelTagAction(pendingEpc, toestelId);
+    if (!res.ok) {
+      setScanMsg({ tone: 'error', text: res.error });
+      return;
+    }
+    setTags((m) => new Map(m).set(res.epc, toestelId));
+    const t = toestelById.get(toestelId);
+    setScanMsg({ tone: 'ok', text: `Chip gekoppeld aan ${t?.model ?? 'toestel'}.` });
+    setPendingEpc(null);
+    if (t) kies(t);
+  }
+
+  // Web Serial (voor readers die geen keyboard-wedge zijn).
+  const serialRef = useRef<(() => void) | null>(null);
+  serialRef.current = serialStop;
+  useEffect(() => () => serialRef.current?.(), []);
+
+  async function toggleSerial() {
+    if (serialStop) {
+      serialStop();
+      setSerialStop(null);
+      return;
+    }
+    try {
+      const stop = await startSerialScan({ baudRate: 9600 }, onScan);
+      setSerialStop(() => stop);
+      setScanMsg({ tone: 'ok', text: 'Web Serial verbonden — scan maar.' });
+    } catch (e) {
+      setScanMsg({ tone: 'error', text: e instanceof Error ? e.message : 'Serial mislukt' });
+    }
   }
 
   // Voorselectie vanuit toesteldetail (?toestel=id) — één keer bij het laden.
@@ -65,7 +167,8 @@ export function ScanClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initieelToestelId]);
 
-  function autoScan() {
+  // Demo zonder hardware: pakt een willekeurig toestel op voorraad.
+  function demoScan() {
     setScanning(true);
     const opVoorraad = data.toestellen.filter((t) => t.voorraadTotaal > 0);
     setTimeout(() => {
@@ -131,26 +234,108 @@ export function ScanClient({
         <h1 className="text-2xl font-bold tracking-tight">Scan toestel</h1>
 
         <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+          <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
             <div
-              className={`flex h-24 w-24 items-center justify-center rounded-full bg-primary/15 text-4xl ${scanning ? 'animate-pulse' : ''}`}
+              className={`flex h-20 w-20 items-center justify-center rounded-full text-4xl ${
+                flash === 'ok'
+                  ? 'bg-green-100'
+                  : flash === 'error'
+                    ? 'bg-red-100'
+                    : 'bg-primary/15'
+              } ${scanning ? 'animate-pulse' : ''}`}
             >
-              {scanning ? '📡' : '📺'}
+              {scanning ? '📡' : flash === 'ok' ? '✅' : flash === 'error' ? '⚠️' : '📺'}
             </div>
             <p className="text-sm text-muted-foreground">
-              {scanning
-                ? 'Toestel herkennen…'
-                : autoDetectie
-                  ? 'Loop langs een tv of kies handmatig.'
-                  : 'Kies een toestel uit de lijst.'}
+              Scan een RFID-chip of barcode met de handheld — of voer de code hieronder in.
             </p>
-            {autoDetectie && (
-              <Button onClick={autoScan} disabled={scanning}>
-                {scanning ? 'Bezig…' : 'Scan toestel'}
+
+            {/* Handmatige invoer: werkt zonder reader, ideaal om te testen. */}
+            <div className="flex w-full max-w-sm gap-2">
+              <Input
+                value={handmatig}
+                onChange={(e) => setHandmatig(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handmatigZoek()}
+                placeholder="EPC of EAN-13…"
+                className="font-mono"
+                aria-label="EPC of EAN"
+              />
+              <Button onClick={handmatigZoek} disabled={!handmatig.trim()}>
+                Zoek
               </Button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {isWebSerialSupported() && (
+                <Button variant="outline" size="sm" onClick={toggleSerial}>
+                  {serialStop ? 'Serial stoppen' : 'Web Serial verbinden'}
+                </Button>
+              )}
+              {autoDetectie && (
+                <Button variant="ghost" size="sm" onClick={demoScan} disabled={scanning}>
+                  {scanning ? 'Bezig…' : 'Demo (willekeurig)'}
+                </Button>
+              )}
+            </div>
+
+            {scanMsg && (
+              <p
+                className={`text-sm font-medium ${
+                  scanMsg.tone === 'ok'
+                    ? 'text-green-700'
+                    : scanMsg.tone === 'warn'
+                      ? 'text-orange-700'
+                      : 'text-red-700'
+                }`}
+              >
+                {scanMsg.text}
+              </p>
             )}
           </CardContent>
         </Card>
+
+        {/* Onbekende chip → koppelen aan een toestel */}
+        {pendingEpc && (
+          <Card className="border-orange-300">
+            <CardContent className="space-y-3 p-4">
+              <p className="text-sm">
+                Chip <span className="font-mono font-semibold">{pendingEpc}</span> is nog niet
+                gekoppeld. Kies het toestel:
+              </p>
+              <Input
+                value={zoekKoppel}
+                onChange={(e) => setZoekKoppel(e.target.value)}
+                placeholder="Zoek model of typenummer…"
+                aria-label="Zoek toestel om te koppelen"
+              />
+              <div className="grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2">
+                {data.toestellen
+                  .filter((t) => {
+                    const q = zoekKoppel.trim().toLowerCase();
+                    return (
+                      !q || `${t.model} ${t.type_nr} ${t.merk}`.toLowerCase().includes(q)
+                    );
+                  })
+                  .slice(0, 12)
+                  .map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => koppelPending(t.id)}
+                      className="rounded-lg border bg-background p-2 text-left text-sm hover:bg-muted"
+                    >
+                      <span className="block font-medium">{t.model}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t.merk} · {t.type_nr}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setPendingEpc(null)}>
+                Annuleren
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div>
           <p className="mb-2 text-sm font-semibold text-muted-foreground">Vandaag op voorraad</p>

@@ -1011,6 +1011,35 @@ export type Database = {
         };
         Relationships: [];
       };
+      toestel_tags: {
+        Row: {
+          epc: string;
+          linked_at: string;
+          status: string;
+          toestel_id: number | null;
+        };
+        Insert: {
+          epc: string;
+          linked_at?: string;
+          status?: string;
+          toestel_id?: number | null;
+        };
+        Update: {
+          epc?: string;
+          linked_at?: string;
+          status?: string;
+          toestel_id?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'toestel_tags_toestel_id_fkey';
+            columns: ['toestel_id'];
+            isOneToOne: false;
+            referencedRelation: 'toestellen';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       toestellen: {
         Row: {
           ean: string | null;

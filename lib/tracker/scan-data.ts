@@ -42,6 +42,8 @@ export interface ScanData {
     marge_c: number;
   }>;
   klanten: Array<{ id: string; naam: string; segment: string | null; prijsfactor: number }>;
+  // RFID-chip → toestel-id (voor scan-herkenning). EAN-match gaat via ScanToestel.ean.
+  tags: Array<{ epc: string; toestel_id: number }>;
 }
 
 export async function getScanData(): Promise<ScanData> {
@@ -54,6 +56,7 @@ export async function getScanData(): Promise<ScanData> {
     { data: filialen },
     { data: bijverkoop },
     { data: klanten },
+    { data: tags },
   ] = await Promise.all([
     supabase.from('toestellen').select('*'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal'),
@@ -62,6 +65,7 @@ export async function getScanData(): Promise<ScanData> {
     supabase.from('filialen').select('id, naam, plaats').order('naam'),
     supabase.from('bijverkoop').select('id, naam, categorie, prijs_c, marge_c').order('categorie'),
     supabase.from('klanten').select('id, naam, segment, prijsfactor').order('naam'),
+    supabase.from('toestel_tags').select('epc, toestel_id').eq('status', 'active'),
   ]);
 
   const voorraadMap = new Map<number, Record<string, number>>();
@@ -106,5 +110,8 @@ export async function getScanData(): Promise<ScanData> {
     filialen: filialen ?? [],
     bijverkoop: bijverkoop ?? [],
     klanten: (klanten ?? []).map((k) => ({ ...k, prijsfactor: Number(k.prijsfactor) })),
+    tags: (tags ?? [])
+      .filter((t): t is { epc: string; toestel_id: number } => t.toestel_id != null)
+      .map((t) => ({ epc: t.epc, toestel_id: t.toestel_id })),
   };
 }
