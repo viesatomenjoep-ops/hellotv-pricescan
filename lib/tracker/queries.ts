@@ -30,6 +30,8 @@ export interface Filiaal {
   postcode?: string | null;
   type?: string | null;
   opent?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export async function getToestellenMetVoorraad(): Promise<{
@@ -40,7 +42,7 @@ export async function getToestellenMetVoorraad(): Promise<{
   const [{ data: toestellen }, { data: voorraad }, { data: filialen }] = await Promise.all([
     supabase.from('toestellen').select('*'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal, wijkt_af_vms'),
-    supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent').order('naam'),
+    supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent, lat, lng').order('naam'),
   ]);
 
   const perToestel = new Map<number, { v: Record<string, number>; afw: boolean }>();
@@ -132,6 +134,8 @@ export async function getFilialenOverzicht(): Promise<
     postcode: string | null;
     type: string | null;
     opent: string | null;
+    lat: number | null;
+    lng: number | null;
     aantal: number;
     waardeC: number;
     topMarge: number;
@@ -156,6 +160,8 @@ export async function getFilialenOverzicht(): Promise<
       postcode: f.postcode ?? null,
       type: f.type ?? null,
       opent: f.opent ?? null,
+      lat: f.lat ?? null,
+      lng: f.lng ?? null,
       aantal,
       waardeC,
       topMarge,
@@ -179,7 +185,7 @@ export async function getToestelDetail(
       supabase.from('voorraad').select('filiaal_id, aantal, wijkt_af_vms').eq('toestel_id', id),
       supabase.from('centraal_magazijn').select('aantal, eta_dagen').eq('toestel_id', id).maybeSingle(),
       supabase.from('verkoop_events').select('marge_c').eq('toestel_id', id),
-      supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent').order('naam'),
+      supabase.from('filialen').select('id, naam, plaats, adres, postcode, type, opent, lat, lng').order('naam'),
     ]);
   if (!t) return null;
 
