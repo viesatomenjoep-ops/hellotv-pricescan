@@ -2,10 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { SignOutButton } from '@/components/sign-out-button';
 import { useFlag } from './flags-provider';
+
+interface Notificatie {
+  id: string;
+  type: string;
+  tekst: string;
+  gelezen: boolean;
+}
 
 interface NavItem {
   href: string;
@@ -69,14 +76,19 @@ function useVisibleSections(): NavSection[] {
 export function TrackerShell({
   userLabel,
   filiaal,
+  notificaties,
   children,
 }: {
   userLabel: string;
   filiaal: string;
+  notificaties: Notificatie[];
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const sections = useVisibleSections();
+  const notifAan = useFlag('notificaties');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const ongelezen = notificaties.filter((n) => !n.gelezen).length;
   const isActive = (href: string) =>
     href === '/tracker' ? pathname === href : pathname.startsWith(href);
 
@@ -126,6 +138,40 @@ export function TrackerShell({
             className="h-9 w-full max-w-md rounded-full border bg-muted/50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <div className="flex items-center gap-3">
+            {notifAan && (
+              <div className="relative">
+                <button
+                  onClick={() => setNotifOpen((o) => !o)}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted"
+                  aria-label="Notificaties"
+                >
+                  <span className="text-lg">🔔</span>
+                  {ongelezen > 0 && (
+                    <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                      {ongelezen}
+                    </span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <div className="absolute right-0 top-11 z-50 w-72 rounded-lg border bg-background p-2 shadow-lg">
+                    {notificaties.length === 0 && (
+                      <p className="p-2 text-sm text-muted-foreground">Geen notificaties.</p>
+                    )}
+                    {notificaties.map((n) => (
+                      <div
+                        key={n.id}
+                        className={cn('rounded-md p-2 text-sm', !n.gelezen && 'bg-muted/60')}
+                      >
+                        <p>{n.tekst}</p>
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          {n.type}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <span className="hidden text-right text-sm sm:block">
               <span className="font-medium">{userLabel}</span>
               <span className="block text-xs text-muted-foreground">{filiaal}</span>
@@ -146,7 +192,7 @@ export function TrackerShell({
               key={i.href}
               href={i.href}
               className={cn(
-                'flex flex-col items-center gap-0.5 px-3 py-1 text-[11px] font-medium',
+                'flex min-h-12 min-w-[52px] flex-col items-center justify-center gap-0.5 px-3 py-1.5 text-[11px] font-medium',
                 center && '-mt-6',
               )}
             >

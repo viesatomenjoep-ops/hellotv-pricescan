@@ -423,6 +423,7 @@ async function reset() {
     'integraties',
     'vms_sync_log',
     'bijverkoop',
+    'klanten',
   ]) {
     await db.from(t).delete().neq('id', '00000000-0000-0000-0000-000000000000');
   }
@@ -520,6 +521,50 @@ async function main() {
       rol_scope: key === 'toestel.prijs_bewerken' ? 'manager' : null,
     })),
   );
+  await ins('notificaties', [
+    { type: 'voorraad', tekst: 'LG OLED evo C4 laag op voorraad in Groningen', gelezen: false },
+    { type: 'marge', tekst: 'Sony Bravia 7 onder marge-drempel na inkoopstijging', gelezen: false },
+    { type: 'verkoop', tekst: 'Nieuwe lead: Samsung OLED S90D — Peter Jansen', gelezen: false },
+    { type: 'systeem', tekst: 'VMS-sync voltooid — 84 regels bijgewerkt', gelezen: true },
+  ]);
+  const today = new Date();
+  const iso = (d: number) =>
+    new Date(today.getFullYear(), today.getMonth(), d).toISOString().slice(0, 10);
+  await ins('agenda_items', [
+    {
+      datum: iso(today.getDate()),
+      tijd: '10:00',
+      titel: 'Teamoverleg marges',
+      type: 'activiteit',
+      locatie: 'Amsterdam',
+    },
+    {
+      datum: iso(today.getDate() + 1),
+      tijd: '14:30',
+      titel: 'Levering Hotel Zon (TCL C805)',
+      type: 'herinnering',
+      locatie: 'Eindhoven',
+    },
+    {
+      datum: iso(today.getDate() + 3),
+      tijd: '11:00',
+      titel: 'Demo The Frame opzetten',
+      type: 'activiteit',
+      locatie: 'Groningen',
+    },
+    {
+      datum: iso(Math.max(1, today.getDate() - 2)),
+      tijd: '09:00',
+      titel: 'Weekrapport afronden',
+      type: 'herinnering',
+      locatie: null,
+    },
+  ]);
+  await ins('integraties', [
+    { soort: 'vms', status: 'verbonden', config_json: {} },
+    { soort: 'email', status: 'niet-verbonden', config_json: {} },
+    { soort: 'drive', status: 'niet-verbonden', config_json: {} },
+  ]);
 
   await report();
 }

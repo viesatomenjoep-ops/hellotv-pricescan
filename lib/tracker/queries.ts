@@ -144,6 +144,24 @@ export async function getFilialenOverzicht(): Promise<
   });
 }
 
+export interface AgendaItem {
+  id: string;
+  datum: string;
+  tijd: string | null;
+  titel: string;
+  type: string;
+  locatie: string | null;
+}
+
+export async function getAgenda(): Promise<AgendaItem[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('agenda_items')
+    .select('id, datum, tijd, titel, type, locatie')
+    .order('datum');
+  return (data ?? []) as AgendaItem[];
+}
+
 export async function getDashboard(): Promise<DashboardData> {
   const supabase = createClient();
   const [{ data: toestellen }, { data: voorraad }, { data: verkopen }, { data: taken }] =

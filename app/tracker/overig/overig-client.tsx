@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useFlag } from '@/components/tracker/flags-provider';
 import { toggleFlagAction } from './actions';
 
 interface Flag {
@@ -13,18 +15,39 @@ interface Flag {
   beschrijving: string | null;
 }
 
+function downloadCsv(naam: string, rows: Array<Record<string, unknown>>) {
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.join(','),
+    ...rows.map((r) => headers.map((h) => JSON.stringify(r[h] ?? '')).join(',')),
+  ].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = naam;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function OverigClient({
   flags,
   isManager,
   notificaties,
+  datasets,
 }: {
   flags: Flag[];
   isManager: boolean;
   notificaties: Array<{ id: string; type: string; tekst: string; gelezen: boolean }>;
+  datasets: {
+    verkopen: Array<Record<string, unknown>>;
+    toestellen: Array<Record<string, unknown>>;
+  };
 }) {
   const router = useRouter();
+  const rapportageAan = useFlag('overig.rapportage_csv');
   const [pending, start] = useTransition();
-  const [tab, setTab] = useState<'notificaties' | 'instellingen'>('instellingen');
+  const [tab, setTab] = useState<'notificaties' | 'instellingen' | 'rapportage'>('instellingen');
 
   function toggle(key: string, enabled: boolean) {
     start(async () => {
@@ -37,17 +60,45 @@ export function OverigClient({
     <div className="mx-auto max-w-3xl space-y-4 p-4 sm:p-6">
       <h1 className="text-2xl font-bold tracking-tight">Meer</h1>
 
-      <div className="flex gap-2">
-        {(['instellingen', 'notificaties'] as const).map((t) => (
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            'instellingen',
+            'notificaties',
+            ...(rapportageAan ? (['rapportage'] as const) : []),
+          ] as const
+        ).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === t ? 'bg-primary text-primary-foreground' : 'border'}`}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize ${tab === t ? 'bg-primary text-primary-foreground' : 'border'}`}
           >
-            {t === 'instellingen' ? 'Instellingen' : 'Notificaties'}
+            {t}
           </button>
         ))}
       </div>
+
+      {tab === 'rapportage' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Rapportage / export</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => downloadCsv('verkopen.csv', datasets.verkopen)}
+            >
+              Verkopen CSV
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => downloadCsv('toestellen.csv', datasets.toestellen)}
+            >
+              Toestellen CSV
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {tab === 'instellingen' && (
         <Card>
