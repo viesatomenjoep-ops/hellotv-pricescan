@@ -63,14 +63,23 @@ export default async function ToestelDetailPage({ params }: { params: { id: stri
             <CardTitle className="text-base">Voorraad</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
-            {filialen.map((f) => (
-              <Row key={f.id} l={f.naam}>
-                {t.voorraad[f.id] ?? 0} stuks
-              </Row>
-            ))}
-            <Row l="Centraal">
-              {t.centraalAantal} {t.centraalEta != null && `· ETA ${t.centraalEta}d`}
-            </Row>
+            {filialen
+              .filter((f) => (t.voorraad[f.id] ?? 0) > 0)
+              .sort((a, b) => (t.voorraad[b.id] ?? 0) - (t.voorraad[a.id] ?? 0))
+              .map((f) => (
+                <Row key={f.id} l={f.naam}>
+                  {t.voorraad[f.id]} stuks
+                </Row>
+              ))}
+            {filialen.every((f) => (t.voorraad[f.id] ?? 0) === 0) && (
+              <p className="text-muted-foreground">Niet op voorraad in de winkels.</p>
+            )}
+            <div className="mt-1 flex items-center justify-between border-t pt-2">
+              <span className="text-muted-foreground">
+                Centraal magazijn{t.centraalEta != null && ` · ETA ${t.centraalEta} d`}
+              </span>
+              <span className="font-medium">{t.centraalAantal} stuks</span>
+            </div>
           </CardContent>
         </Card>
       </div>

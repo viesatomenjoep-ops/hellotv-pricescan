@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { formatEuro } from '@/lib/pricing/margin';
+import { MargeStip } from '@/components/tracker/marge-stip';
 import type { ToestelRow } from '@/lib/tracker/queries';
 
 export function ZoekenClient({ toestellen }: { toestellen: ToestelRow[] }) {
@@ -62,11 +63,12 @@ export function ZoekenClient({ toestellen }: { toestellen: ToestelRow[] }) {
         {rows.map((t) => (
           <div
             key={t.id}
-            className="flex items-center justify-between rounded-lg border bg-background p-3"
+            className="flex items-center gap-3 rounded-xl border bg-card p-3 elev-1"
           >
+            <MargeStip margePct={t.margePct} />
             <Link href={`/tracker/toestellen/${t.id}`} className="min-w-0 flex-1 hover:underline">
-              <p className="text-sm font-medium">{t.model}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="truncate text-sm font-medium">{t.model}</p>
+              <p className="truncate text-xs text-muted-foreground">
                 {t.merk} · {t.type_nr} · {t.inch}&quot; · {formatEuro(t.ticket_c)}
               </p>
             </Link>
