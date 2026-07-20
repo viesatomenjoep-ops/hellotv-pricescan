@@ -16,6 +16,7 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
   const [q, setQ] = useState('');
   const [klasse, setKlasse] = useState<string | null>(null);
   const [merk, setMerk] = useState<string | null>(null);
+  const [sort, setSort] = useState<'marge' | 'model'>('marge');
 
   const merken = useMemo(
     () => Array.from(new Set(toestellen.map((t) => t.merk))).sort(),
@@ -25,13 +26,15 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return toestellen.filter(
-      (t) =>
-        (!term || `${t.model} ${t.type_nr} ${t.ean}`.toLowerCase().includes(term)) &&
-        (!klasse || t.klasse === klasse) &&
-        (!merk || t.merk === merk),
-    );
-  }, [toestellen, q, klasse, merk]);
+    return toestellen
+      .filter(
+        (t) =>
+          (!term || `${t.model} ${t.type_nr} ${t.ean}`.toLowerCase().includes(term)) &&
+          (!klasse || t.klasse === klasse) &&
+          (!merk || t.merk === merk),
+      )
+      .sort((a, b) => (sort === 'marge' ? b.margePct - a.margePct : a.model.localeCompare(b.model)));
+  }, [toestellen, q, klasse, merk, sort]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
@@ -65,7 +68,23 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
             {m}
           </Button>
         ))}
-        <span className="ml-auto text-sm text-muted-foreground">{rows.length} toestellen</span>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="inline-flex rounded-full border p-0.5 text-xs">
+            <button
+              onClick={() => setSort('marge')}
+              className={`rounded-full px-2.5 py-1 font-medium ${sort === 'marge' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+            >
+              Marge
+            </button>
+            <button
+              onClick={() => setSort('model')}
+              className={`rounded-full px-2.5 py-1 font-medium ${sort === 'model' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+            >
+              A–Z
+            </button>
+          </div>
+          <span className="text-sm text-muted-foreground">{rows.length}</span>
+        </div>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
