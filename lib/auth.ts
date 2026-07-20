@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase/server';
 
@@ -11,8 +12,9 @@ export interface SessionUser {
   role: Role | null;
 }
 
-/** Huidige gebruiker + rol (server-side). null als niet ingelogd. */
-export async function getSessionUser(): Promise<SessionUser | null> {
+/** Huidige gebruiker + rol (server-side). null als niet ingelogd.
+ *  Gecacht per request (React cache) zodat layout + pagina niet elk apart auth.getUser() doen. */
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = createClient();
   const {
     data: { user },
@@ -31,7 +33,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     fullName: profile?.full_name ?? null,
     role: (profile?.role ?? null) as Role | null,
   };
-}
+});
 
 /** Vereist een van de rollen; anders redirect. Voor server components / layouts. */
 export async function requireRole(roles: Role[]): Promise<SessionUser> {
