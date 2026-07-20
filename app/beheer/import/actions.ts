@@ -45,23 +45,32 @@ export async function commitImport(
     const supabase = createClient();
 
     const brandNames = Array.from(new Set(valid.map((v) => v.row.brand)));
-    await supabase.from('brands').upsert(
+    const brandUpsert = await supabase.from('brands').upsert(
       brandNames.map((name) => ({ name })),
       { onConflict: 'name' },
     );
-    const { data: brands } = await supabase.from('brands').select('id, name');
+    if (brandUpsert.error) throw new Error(`Merken: ${brandUpsert.error.message}`);
+
+    const { data: brands, error: brandsErr } = await supabase.from('brands').select('id, name');
+    if (brandsErr) throw new Error(brandsErr.message);
     const brandId = new Map((brands ?? []).map((b) => [b.name, b.id]));
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existErr } = await supabase
       .from('products')
       .select('id, ean, brand_id, model_number');
+    if (existErr) throw new Error(existErr.message);
     const eanMap = new Map((existing ?? []).filter((e) => e.ean).map((e) => [e.ean!, e.id]));
     const keyMap = new Map((existing ?? []).map((e) => [`${e.brand_id}|${e.model_number}`, e.id]));
 
     let created = 0;
     let updated = 0;
+    const errors: string[] = [];
     for (const { row } of valid) {
-      const bId = brandId.get(row.brand)!;
+      const bId = brandId.get(row.brand);
+      if (!bId) {
+        errors.push(`Merk niet gevonden: ${row.brand}`);
+        continue;
+      }
       const existId = (row.ean && eanMap.get(row.ean)) || keyMap.get(`${bId}|${row.modelNumber}`);
       const record = {
         brand_id: bId,
@@ -74,13 +83,12 @@ export async function commitImport(
         segment: row.segment ?? null,
         sku_hellotv: row.skuHellotv ?? null,
       };
-      if (existId) {
-        await supabase.from('products').update(record).eq('id', existId);
-        updated++;
-      } else {
-        await supabase.from('products').insert(record);
-        created++;
-      }
+      const { error } = existId
+        ? await supabase.from('products').update(record).eq('id', existId)
+        : await supabase.from('products').insert(record);
+      if (error) errors.push(`${row.modelNumber}: ${error.message}`);
+      else if (existId) updated++;
+      else created++;
     }
 
     // Opvolger-EAN -> successor_id.
@@ -97,12 +105,16 @@ export async function commitImport(
     await supabase.from('import_runs').insert({
       source: 'csv',
       finished_at: new Date().toISOString(),
-      status: 'success',
+      status: errors.length > 0 ? 'failed' : 'success',
       new_count: created,
       updated_count: updated,
       invalid_count: invalid.length,
+      error_text: errors.length > 0 ? errors.slice(0, 20).join('; ') : null,
     });
 
+    if (errors.length > 0) {
+      return { ok: false, error: `${errors.length} rij(en) mislukt: ${errors[0]}` };
+    }
     revalidatePath('/catalogus');
     return { ok: true, data: { created, updated, invalid: invalid.length } };
   } catch (e) {

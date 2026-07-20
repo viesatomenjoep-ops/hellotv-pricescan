@@ -23,14 +23,6 @@ export const ean13Schema = z
   .trim()
   .refine(isValidEan13, 'Ongeldige EAN-13 (checksum klopt niet)');
 
-/** Prijsmutatie (interne mutatie / sync). */
-export const priceMutationSchema = z.object({
-  productId: z.string().uuid(),
-  field: z.enum(['purchase', 'sale']),
-  newCents: z.number().int().min(0),
-});
-export type PriceMutation = z.infer<typeof priceMutationSchema>;
-
 /** Eén voorraadregel binnen een Vendit-artikel. */
 export const venditStockSchema = z.object({
   locationCode: z.string().min(1),
@@ -67,10 +59,3 @@ export const productImportRowSchema = z.object({
   successorEan: z.string().optional(),
 });
 export type ProductImportRow = z.infer<typeof productImportRowSchema>;
-
-/** Quarantaine-besluit (C5). */
-export const quarantineDecisionSchema = z.object({
-  quarantineId: z.string().uuid(),
-  decision: z.enum(['approved', 'rejected']),
-});
-export type QuarantineDecision = z.infer<typeof quarantineDecisionSchema>;

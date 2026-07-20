@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { VenditAdapter, VenditArticleRow } from './types';
 import {
   DEFAULT_MAPPING,
@@ -6,6 +7,13 @@ import {
   type PriceUnit,
   type VenditFieldMapping,
 } from './normalize';
+
+// Zod op de grens: valideer de vorm van de Vendit-page-response voordat we mappen.
+const venditRowSchema = z.record(z.string(), z.unknown());
+const venditPageSchema = z.union([
+  z.array(venditRowSchema),
+  z.object({ items: z.array(venditRowSchema) }),
+]);
 
 // Vendit REST-adapter (C2). Structuur staat; endpoints/auth worden bevestigd zodra de Vendit
 // API-documentatie binnen is. Auth-stijl, veldmapping en prijs-unit zijn configureerbaar
@@ -68,7 +76,8 @@ export function mapRow(
   const sale = normalizePriceToCents(raw[m.salePrice] as string | number, cfg.priceUnit);
   if (purchase.ambiguous || sale.ambiguous) counters.priceAmbiguous += 1;
 
-  const stockRaw = (raw[m.stock] as Array<Record<string, unknown>>) ?? [];
+  const stockField = raw[m.stock];
+  const stockRaw: Array<Record<string, unknown>> = Array.isArray(stockField) ? stockField : [];
 
   return {
     venditArticleId: String(raw[m.articleId] ?? ''),
@@ -112,9 +121,8 @@ export class VenditRestAdapter implements VenditAdapter {
         continue;
       }
       if (!res.ok) throw new Error(`Vendit ${res.status}: ${await res.text()}`);
-      const json = (await res.json()) as
-        { items?: Record<string, unknown>[] } | Record<string, unknown>[];
-      return Array.isArray(json) ? json : (json.items ?? []);
+      const parsed = venditPageSchema.parse(await res.json());
+      return Array.isArray(parsed) ? parsed : parsed.items;
     }
     throw new Error('Vendit: te veel herhaalde fouten (429/5xx)');
   }

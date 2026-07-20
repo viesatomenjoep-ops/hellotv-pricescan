@@ -1,5 +1,8 @@
 import 'server-only';
+import { z } from 'zod';
 import { createClient } from './server';
+
+const priceFieldSchema = z.enum(['purchase', 'sale']);
 
 // Leeslaag voor dashboard, prijzen, quarantaine, scans en instellingen (blok F, C5, E4).
 // RLS bepaalt zichtbaarheid per rol; deze functies draaien met de sessie van de gebruiker.
@@ -26,14 +29,14 @@ export async function getDashboardData(): Promise<DashboardData> {
   startOfDay.setHours(0, 0, 0, 0);
 
   const [
-    { data: sync },
-    { count: scansToday },
-    { count: pendingQuarantine },
-    { count: pendingMatches },
-    { count: underMargin },
-    { data: products },
-    { data: prices },
-    { data: tags },
+    syncRes,
+    scansTodayRes,
+    pendingQuarantineRes,
+    pendingMatchesRes,
+    underMarginRes,
+    productsRes,
+    pricesRes,
+    tagsRes,
   ] = await Promise.all([
     supabase
       .from('sync_runs')
@@ -59,6 +62,28 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabase.from('prices').select('product_id'),
     supabase.from('rfid_tags').select('product_id').eq('status', 'active'),
   ]);
+
+  for (const r of [
+    syncRes,
+    scansTodayRes,
+    pendingQuarantineRes,
+    pendingMatchesRes,
+    underMarginRes,
+    productsRes,
+    pricesRes,
+    tagsRes,
+  ]) {
+    if (r.error) throw new Error(r.error.message);
+  }
+
+  const sync = syncRes.data;
+  const scansToday = scansTodayRes.count;
+  const pendingQuarantine = pendingQuarantineRes.count;
+  const pendingMatches = pendingMatchesRes.count;
+  const underMargin = underMarginRes.count;
+  const products = productsRes.data;
+  const prices = pricesRes.data;
+  const tags = tagsRes.data;
 
   const priceSet = new Set((prices ?? []).map((p) => p.product_id));
   const tagSet = new Set((tags ?? []).map((t) => t.product_id));
@@ -112,7 +137,21 @@ export async function getRecentPriceChanges(limit = 100): Promise<PriceChange[]>
     .order('changed_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
-  return (data ?? []) as PriceChange[];
+  return z
+    .array(
+      z.object({
+        id: z.string(),
+        model_name: z.string(),
+        field: priceFieldSchema,
+        old_cents: z.number().nullable(),
+        new_cents: z.number().nullable(),
+        delta_cents: z.number().nullable(),
+        delta_pct: z.coerce.number().nullable(),
+        current_margin_pct: z.coerce.number().nullable(),
+        changed_at: z.string(),
+      }),
+    )
+    .parse(data ?? []);
 }
 
 export interface MarginWatchItem {
@@ -134,7 +173,19 @@ export async function getMarginWatchlist(): Promise<MarginWatchItem[]> {
     )
     .order('margin_pct', { ascending: true });
   if (error) throw new Error(error.message);
-  return (data ?? []) as MarginWatchItem[];
+  return z
+    .array(
+      z.object({
+        product_id: z.string(),
+        brand_name: z.string(),
+        model_name: z.string(),
+        model_number: z.string(),
+        margin_pct: z.coerce.number().nullable(),
+        margin_cents: z.number().nullable(),
+        sale_price_cents: z.number().nullable(),
+      }),
+    )
+    .parse(data ?? []);
 }
 
 export interface QuarantineItem {
@@ -157,7 +208,25 @@ export async function getPendingQuarantine(): Promise<QuarantineItem[]> {
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as QuarantineItem[];
+
+  const flat = z.object({
+    id: z.string(),
+    field: priceFieldSchema,
+    current_cents: z.number().nullable(),
+    proposed_cents: z.number().nullable(),
+    delta_pct: z.coerce.number().nullable(),
+    created_at: z.string(),
+  });
+  return (data ?? []).map((r) => {
+    const prod = Array.isArray(r.products) ? r.products[0] : r.products;
+    const brand = prod ? (Array.isArray(prod.brands) ? prod.brands[0] : prod.brands) : null;
+    return {
+      ...flat.parse(r),
+      products: prod
+        ? { model_name: prod.model_name, brands: brand ? { name: brand.name } : null }
+        : null,
+    };
+  });
 }
 
 export interface ScanEventRow {
@@ -178,7 +247,19 @@ export async function getScanEvents(limit = 200): Promise<ScanEventRow[]> {
     .order('scanned_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as ScanEventRow[];
+
+  const flat = z.object({
+    id: z.string(),
+    epc: z.string().nullable(),
+    ean: z.string().nullable(),
+    input_type: z.enum(['rfid', 'ean']),
+    result: z.enum(['hit', 'unknown_tag', 'unlinked']),
+    scanned_at: z.string(),
+  });
+  return (data ?? []).map((r) => {
+    const prod = Array.isArray(r.products) ? r.products[0] : r.products;
+    return { ...flat.parse(r), products: prod ? { model_name: prod.model_name } : null };
+  });
 }
 
 export async function getMarginByBrand(): Promise<Array<{ brand: string; avgMarginPct: number }>> {
@@ -246,5 +327,5 @@ export async function getSettings(): Promise<SettingRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase.from('settings').select('key, value').order('key');
   if (error) throw new Error(error.message);
-  return (data ?? []) as SettingRow[];
+  return z.array(z.object({ key: z.string(), value: z.unknown() })).parse(data ?? []);
 }

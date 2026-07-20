@@ -69,8 +69,3 @@ export const DEFAULT_MAPPING: VenditFieldMapping = {
   stock: 'stock',
   changedAt: 'modifiedAt',
 };
-
-/** Lees een veld uit een ruwe Vendit-rij volgens de (instelbare) mapping. */
-export function pick(row: Record<string, unknown>, key: string): unknown {
-  return row[key];
-}
