@@ -39,6 +39,7 @@ const SECTIONS: NavSection[] = [
       { href: '/tracker/scan', label: 'Scan toestel' },
       { href: '/tracker/aanbevelingen', label: 'Aanbevelingen' },
       { href: '/tracker/verkopen', label: 'Verkopen' },
+      { href: '/tracker/verkopers', label: 'Verkopers' },
     ],
   },
   {

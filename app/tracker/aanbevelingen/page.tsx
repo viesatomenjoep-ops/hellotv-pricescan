@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getToestellenMetVoorraad } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,8 @@ export default async function AanbevelingenPage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         {top3.map((t, i) => (
-          <Card key={t.id}>
+          <Card key={t.id} className="transition-colors hover:bg-muted/50">
+            <Link href={`/tracker/toestellen/${t.id}`} className="block">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <Badge>{['🥇', '🥈', '🥉'][i]} Topper</Badge>
@@ -40,6 +42,7 @@ export default async function AanbevelingenPage() {
                 {t.merk} · {t.margePct}% marge · {t.voorraadTotaal} st
               </p>
             </CardContent>
+            </Link>
           </Card>
         ))}
       </div>
@@ -54,13 +57,18 @@ export default async function AanbevelingenPage() {
           <CardContent>
             <ul className="divide-y text-sm">
               {g.items.map((t) => (
-                <li key={t.id} className="flex items-center justify-between py-2">
-                  <span>
-                    {t.model} <span className="text-xs text-muted-foreground">{t.merk}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    score {t.score} · {t.margePct}%
-                  </span>
+                <li key={t.id} className="py-0">
+                  <Link
+                    href={`/tracker/toestellen/${t.id}`}
+                    className="flex items-center justify-between py-2 hover:underline"
+                  >
+                    <span>
+                      {t.model} <span className="text-xs text-muted-foreground">{t.merk}</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      score {t.score} · {t.margePct}%
+                    </span>
+                  </Link>
                 </li>
               ))}
               {g.items.length === 0 && <li className="py-2 text-muted-foreground">—</li>}

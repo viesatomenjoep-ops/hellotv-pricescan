@@ -205,6 +205,46 @@ export async function getAgenda(): Promise<AgendaItem[]> {
   return (data ?? []) as AgendaItem[];
 }
 
+export interface VerkoperPrestatie {
+  id: string;
+  naam: string;
+  filiaal_id: string | null;
+  deals: number;
+  gewonnen: number;
+  omzetC: number;
+  openC: number;
+}
+
+export async function getVerkopersPrestaties(): Promise<VerkoperPrestatie[]> {
+  const supabase = createClient();
+  const [{ data: verkopers }, { data: verkopen }] = await Promise.all([
+    supabase.from('verkopers').select('id, naam, filiaal_id').order('naam'),
+    supabase.from('verkopen').select('verkoper_id, waarde_c, status'),
+  ]);
+
+  const perVerkoper = new Map<string, { deals: number; gewonnen: number; omzetC: number; openC: number }>();
+  for (const v of verkopen ?? []) {
+    if (!v.verkoper_id) continue;
+    const cur = perVerkoper.get(v.verkoper_id) ?? { deals: 0, gewonnen: 0, omzetC: 0, openC: 0 };
+    cur.deals += 1;
+    const afgerond = v.status === 'verkocht' || v.status === 'geleverd';
+    if (afgerond) {
+      cur.gewonnen += 1;
+      cur.omzetC += v.waarde_c;
+    } else {
+      cur.openC += v.waarde_c;
+    }
+    perVerkoper.set(v.verkoper_id, cur);
+  }
+
+  return (verkopers ?? [])
+    .map((vk) => {
+      const p = perVerkoper.get(vk.id) ?? { deals: 0, gewonnen: 0, omzetC: 0, openC: 0 };
+      return { id: vk.id, naam: vk.naam, filiaal_id: vk.filiaal_id ?? null, ...p };
+    })
+    .sort((a, b) => b.omzetC - a.omzetC || b.gewonnen - a.gewonnen);
+}
+
 export interface IntegratieRow {
   id: string;
   soort: string;
