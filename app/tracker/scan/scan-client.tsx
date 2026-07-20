@@ -13,6 +13,7 @@ import { classifyScan, type Scan } from '@/lib/rfid/classify';
 import { isWebSerialSupported, startSerialScan } from '@/lib/rfid/serial-adapter';
 import type { ScanData, ScanToestel } from '@/lib/tracker/scan-data';
 import { FiliaalSelect } from '@/components/tracker/filiaal-select';
+import { MargeRadar, margeVerdict, margeVibratie } from '@/components/tracker/marge-radar';
 import { DealExtras } from '@/components/tracker/deal-extras';
 import { gekozenExtras, type ExtraSelectie } from '@/lib/tracker/extras-catalog';
 import { koppelToestelTagAction } from './actions';
@@ -29,14 +30,8 @@ function margeTone(pct: number) {
   return pct >= 25 ? 'text-green-700' : pct >= 15 ? 'text-orange-700' : 'text-red-700';
 }
 
-// Marge-verdict voor de radar: kleur + korte tekst, glanceable (kleur is het signaal).
-function margeVerdict(pct: number) {
-  if (pct >= 16)
-    return { tier: 'hoog', paneel: 'bg-green-50 border-green-200', ring: 'bg-green-600', tekst: 'text-green-800', label: 'Sterke marge', advies: 'Push dit toestel' };
-  if (pct >= 12)
-    return { tier: 'mid', paneel: 'bg-amber-50 border-amber-200', ring: 'bg-amber-500', tekst: 'text-amber-800', label: 'Redelijke marge', advies: 'Prima — of pak een alternatief' };
-  return { tier: 'laag', paneel: 'bg-red-50 border-red-200', ring: 'bg-red-600', tekst: 'text-red-800', label: 'Lage marge', advies: 'Stuur naar een beter alternatief' };
-}
+const tvMargePct = (ticket_c: number, inkoop_c: number) =>
+  ticket_c > 0 ? ((ticket_c - inkoop_c) / ticket_c) * 100 : 0;
 const KLASSE_KLEUR: Record<string, string> = {
   OLED: 'bg-[#EFEAF7] text-[#6B4EAA]',
   QLED: 'bg-[#E4EEFA] text-[#2563B8]',
@@ -91,8 +86,10 @@ export function ScanClient({
     setKlantView(false);
     setSheet(false);
     setPendingEpc(null);
-    // Voelbare 'trigger' zodat de verkoper niet naar het scherm hoeft te kijken.
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(18);
+    // Voelbare 'trigger' met patroon per marge-niveau — voelen zonder kijken.
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate?.(margeVibratie(tvMargePct(t.ticket_c, t.inkoop_c)));
+    }
   }, []);
 
   // Verwerk een binnengekomen scan (HID, Web Serial of handmatig).
@@ -451,29 +448,9 @@ export function ScanClient({
       </div>
 
       {/* Marge-radar — eerste, glanceable signaal na de scan (alleen verkoper) */}
-      {!klantView &&
-        slim &&
-        (() => {
-          const v = margeVerdict(slim.eigenMarge);
-          return (
-            <div className={`flex items-center gap-4 rounded-2xl border p-4 ${v.paneel}`}>
-              <div
-                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-white ${v.ring}`}
-              >
-                <span className="text-xl font-extrabold tabular-nums">
-                  {Math.round(slim.eigenMarge)}%
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className={`text-base font-bold ${v.tekst}`}>{v.label}</p>
-                <p className="text-sm text-muted-foreground">{v.advies}</p>
-                <p className="text-sm font-semibold">
-                  {formatEuro(selected.ticket_c - selected.inkoop_c)} marge
-                </p>
-              </div>
-            </div>
-          );
-        })()}
+      {!klantView && slim && (
+        <MargeRadar margePct={slim.eigenMarge} margeC={selected.ticket_c - selected.inkoop_c} />
+      )}
 
       {/* Slimme alternatieven op marge */}
       {!klantView && slim && (

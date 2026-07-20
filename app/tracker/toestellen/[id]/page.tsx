@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatEuro } from '@/lib/pricing/margin';
+import { MargeRadar } from '@/components/tracker/marge-radar';
 import { TicketEditor } from './ticket-editor';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,8 @@ export default async function ToestelDetailPage({ params }: { params: { id: stri
           {t.merk} · {t.type_nr} · {t.inch}&quot; · EAN {t.ean}
         </span>
       </div>
+
+      <MargeRadar margePct={t.margePct} margeC={t.margeC} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
