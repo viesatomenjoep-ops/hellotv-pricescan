@@ -4,6 +4,7 @@
  *
  * Wachtwoord voor alle drie: PriceScan!2026  (wijzig na eerste login).
  */
+import './load-env';
 import { createClient } from '@supabase/supabase-js';
 
 const LOCAL_URL = 'http://127.0.0.1:55321';

@@ -4,6 +4,7 @@
  *
  *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... pnpm tsx scripts/seed.ts
  */
+import './load-env';
 import { createClient } from '@supabase/supabase-js';
 import { buildCatalog } from '../lib/catalog/tv-catalog';
 import { SERIES } from '../lib/catalog/tv-series';

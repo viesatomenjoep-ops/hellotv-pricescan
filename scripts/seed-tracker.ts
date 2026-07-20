@@ -2,6 +2,7 @@
  * Seed voor de HelloTV Sales Tracker (prototype-data). Bedragen in centen.
  *   pnpm db:seed-tracker   (valt terug op de lokale Supabase)
  */
+import './load-env';
 import { createClient } from '@supabase/supabase-js';
 import { buildCatalog } from '../lib/catalog/tv-catalog';
 import { SERIES } from '../lib/catalog/tv-series';
