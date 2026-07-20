@@ -30,11 +30,20 @@ export function AanbevelingenClient({ items }: { items: AanbevolenItem[] }) {
     [items],
   );
   const [gekozen, setGekozen] = useState<Set<number>>(new Set());
+  const [sort, setSort] = useState<'marge-hoog' | 'marge-laag' | 'score'>('marge-hoog');
+  const [limit, setLimit] = useState<3 | 5 | 0>(0); // 0 = alle
 
   const rows = useMemo(() => {
     const base = gekozen.size ? items.filter((t) => t.inch != null && gekozen.has(t.inch)) : items;
-    return [...base].sort((a, b) => b.score - a.score).slice(0, 40);
-  }, [items, gekozen]);
+    const sorted = [...base].sort((a, b) =>
+      sort === 'score'
+        ? b.score - a.score
+        : sort === 'marge-laag'
+          ? a.margePct - b.margePct
+          : b.margePct - a.margePct,
+    );
+    return limit ? sorted.slice(0, limit) : sorted.slice(0, 40);
+  }, [items, gekozen, sort, limit]);
 
   function toggle(maat: number) {
     setGekozen((prev) => {
@@ -81,6 +90,44 @@ export function AanbevelingenClient({ items }: { items: AanbevolenItem[] }) {
             Wis maten
           </button>
         )}
+      </div>
+
+      {/* Top-selectie + sortering */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-full border p-0.5 text-xs">
+          {([['Top 3', 3], ['Top 5', 5], ['Alle', 0]] as const).map(([l, n]) => (
+            <button
+              key={l}
+              onClick={() => setLimit(n)}
+              className={cn(
+                'rounded-full px-3 py-1.5 font-medium',
+                limit === n ? 'bg-primary text-primary-foreground' : 'text-muted-foreground',
+              )}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        <div className="inline-flex rounded-full border p-0.5 text-xs">
+          {(
+            [
+              ['Marge ↓', 'marge-hoog'],
+              ['Marge ↑', 'marge-laag'],
+              ['Score', 'score'],
+            ] as const
+          ).map(([l, s]) => (
+            <button
+              key={s}
+              onClick={() => setSort(s)}
+              className={cn(
+                'rounded-full px-3 py-1.5 font-medium',
+                sort === s ? 'bg-foreground text-background' : 'text-muted-foreground',
+              )}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Compacte, gesorteerde lijst */}

@@ -16,7 +16,7 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
   const [q, setQ] = useState('');
   const [klasse, setKlasse] = useState<string | null>(null);
   const [merk, setMerk] = useState<string | null>(null);
-  const [sort, setSort] = useState<'marge' | 'model'>('marge');
+  const [sort, setSort] = useState<'marge-hoog' | 'marge-laag' | 'model'>('marge-hoog');
 
   const merken = useMemo(
     () => Array.from(new Set(toestellen.map((t) => t.merk))).sort(),
@@ -33,7 +33,13 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
           (!klasse || t.klasse === klasse) &&
           (!merk || t.merk === merk),
       )
-      .sort((a, b) => (sort === 'marge' ? b.margePct - a.margePct : a.model.localeCompare(b.model)));
+      .sort((a, b) =>
+        sort === 'model'
+          ? a.model.localeCompare(b.model)
+          : sort === 'marge-laag'
+            ? a.margePct - b.margePct
+            : b.margePct - a.margePct,
+      );
   }, [toestellen, q, klasse, merk, sort]);
 
   return (
@@ -70,18 +76,21 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
         ))}
         <div className="ml-auto flex items-center gap-2">
           <div className="inline-flex rounded-full border p-0.5 text-xs">
-            <button
-              onClick={() => setSort('marge')}
-              className={`rounded-full px-2.5 py-1 font-medium ${sort === 'marge' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
-            >
-              Marge
-            </button>
-            <button
-              onClick={() => setSort('model')}
-              className={`rounded-full px-2.5 py-1 font-medium ${sort === 'model' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
-            >
-              A–Z
-            </button>
+            {(
+              [
+                ['Marge ↓', 'marge-hoog'],
+                ['Marge ↑', 'marge-laag'],
+                ['A–Z', 'model'],
+              ] as const
+            ).map(([l, s]) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={`rounded-full px-2.5 py-1 font-medium ${sort === s ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+              >
+                {l}
+              </button>
+            ))}
           </div>
           <span className="text-sm text-muted-foreground">{rows.length}</span>
         </div>
