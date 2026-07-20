@@ -205,6 +205,22 @@ export async function getAgenda(): Promise<AgendaItem[]> {
   return (data ?? []) as AgendaItem[];
 }
 
+export interface IntegratieRow {
+  id: string;
+  soort: string;
+  status: string;
+  config_json: Record<string, unknown>;
+}
+
+export async function getIntegraties(): Promise<IntegratieRow[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('integraties')
+    .select('id, soort, status, config_json')
+    .order('soort');
+  return (data ?? []) as IntegratieRow[];
+}
+
 export interface TargetRow {
   periode: string;
   omzet_c: number;

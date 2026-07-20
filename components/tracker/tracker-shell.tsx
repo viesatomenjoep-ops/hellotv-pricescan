@@ -56,6 +56,13 @@ const SECTIONS: NavSection[] = [
       { href: '/tracker/agenda', label: 'Agenda', flag: 'agenda' },
     ],
   },
+  {
+    title: 'Beheer',
+    items: [
+      { href: '/tracker/overig', label: 'Overig' },
+      { href: '/tracker/koppelingen', label: 'Koppelingen', flag: 'overig.koppelingen' },
+    ],
+  },
 ];
 
 const BOTTOM: NavItem[] = [
@@ -68,9 +75,14 @@ const BOTTOM: NavItem[] = [
 
 function useVisibleSections(): NavSection[] {
   const agenda = useFlag('agenda');
+  const koppelingen = useFlag('overig.koppelingen');
+  const flagAan: Record<string, boolean> = {
+    agenda,
+    'overig.koppelingen': koppelingen,
+  };
   return SECTIONS.map((s) => ({
     ...s,
-    items: s.items.filter((i) => !i.flag || (i.flag === 'agenda' ? agenda : true)),
+    items: s.items.filter((i) => !i.flag || flagAan[i.flag]),
   })).filter((s) => s.items.length > 0);
 }
 
