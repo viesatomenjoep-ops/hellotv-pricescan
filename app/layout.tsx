@@ -1,19 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import localFont from 'next/font/local';
+import { Baloo_2, Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
 import { OnlineStatus } from '@/components/online-status';
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-sans',
-  weight: '100 900',
+// helloTV design system: Baloo 2 (alleen logo), Bricolage Grotesque (koppen),
+// Plus Jakarta Sans (body/UI).
+const logo = Baloo_2({ subsets: ['latin'], weight: ['800'], variable: '--font-logo' });
+const display = Bricolage_Grotesque({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-display',
 });
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-mono',
-  weight: '100 900',
+const body = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-body',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#19445B',
+  themeColor: '#111111',
   width: 'device-width',
   initialScale: 1,
 };
@@ -35,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(geistSans.variable, geistMono.variable)}>
+    <html lang="nl" className={cn(logo.variable, display.variable, body.variable)}>
       <body className="font-sans antialiased">
         <OnlineStatus />
         <AppHeader />

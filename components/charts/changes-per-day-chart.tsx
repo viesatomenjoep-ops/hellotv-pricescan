@@ -18,7 +18,7 @@ export function ChangesPerDayChart({ data }: { data: Array<{ date: string; count
         <XAxis dataKey="date" fontSize={11} />
         <YAxis allowDecimals={false} fontSize={12} />
         <Tooltip formatter={(v) => [`${v}`, 'Wijzigingen']} />
-        <Area type="monotone" dataKey="count" stroke="#19445B" fill="#19445B" fillOpacity={0.15} />
+        <Area type="monotone" dataKey="count" stroke="#111111" fill="#111111" fillOpacity={0.12} />
       </AreaChart>
     </ResponsiveContainer>
   );

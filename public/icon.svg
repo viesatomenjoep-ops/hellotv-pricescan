@@ -1,6 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#19445B" />
-  <text x="50%" y="46%" font-family="system-ui, sans-serif" font-size="150" font-weight="700"
-    fill="#ffffff" text-anchor="middle">hTV</text>
-  <rect x="128" y="320" width="256" height="40" rx="20" fill="#F26B21" />
+  <rect width="512" height="512" rx="96" fill="#111111" />
+  <!-- gele spraakbubbel met vierkante staart linksonder (DS bubble mark) -->
+  <path
+    d="M136 116 h240 a60 60 0 0 1 60 60 v120 a60 60 0 0 1 -60 60 H196 l-60 60 v-60 h-0 a60 60 0 0 1 -60 -60 V176 a60 60 0 0 1 60 -60 Z"
+    fill="#FFD200"
+  />
+  <text x="256" y="272" font-family="system-ui, sans-serif" font-size="150" font-weight="800"
+    fill="#111111" text-anchor="middle">tv</text>
 </svg>

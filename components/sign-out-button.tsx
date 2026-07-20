@@ -12,7 +12,12 @@ export function SignOutButton() {
     router.refresh();
   }
   return (
-    <Button variant="ghost" size="sm" onClick={signOut}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={signOut}
+      className="text-background hover:bg-background/10 hover:text-background"
+    >
       Uitloggen
     </Button>
   );

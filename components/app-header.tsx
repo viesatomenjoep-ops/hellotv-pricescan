@@ -8,7 +8,7 @@ const ROLE_LABEL: Record<string, string> = {
   warehouse: 'Magazijn',
 };
 
-// App-header met branding (navy #19445B, oranje accent #F26B21). Rendert alleen als ingelogd.
+// App-header — helloTV huisstijl: inkt-zwarte balk, geel Baloo 2-woordmerk. Alleen als ingelogd.
 export async function AppHeader() {
   const user = await getSessionUser();
   if (!user) return null;
@@ -24,24 +24,22 @@ export async function AppHeader() {
   const nav = items.filter((n) => user.role && n.roles.includes(user.role));
 
   return (
-    <header
-      className="flex items-center justify-between gap-4 px-4 py-2 text-white"
-      style={{ backgroundColor: '#19445B' }}
-    >
+    <header className="flex items-center justify-between gap-4 bg-foreground px-4 py-2 text-background">
       <div className="flex items-center gap-6">
-        <Link href="/" className="font-semibold tracking-tight">
-          helloTV <span style={{ color: '#F26B21' }}>PriceScan</span>
+        <Link href="/" className="font-logo text-lg font-extrabold tracking-tight">
+          <span className="text-primary">hello</span>TV{' '}
+          <span className="font-sans text-sm font-semibold opacity-90">PriceScan</span>
         </Link>
         <nav className="flex gap-4 text-sm">
           {nav.map((n) => (
-            <Link key={n.href} href={n.href} className="opacity-90 hover:opacity-100">
+            <Link key={n.href} href={n.href} className="opacity-80 hover:opacity-100">
               {n.label}
             </Link>
           ))}
         </nav>
       </div>
       <div className="flex items-center gap-3 text-sm">
-        <span className="opacity-90">
+        <span className="opacity-80">
           {user.fullName ?? user.email}
           {user.role && ` · ${ROLE_LABEL[user.role] ?? user.role}`}
         </span>

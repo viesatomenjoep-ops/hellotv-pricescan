@@ -51,8 +51,22 @@ export function PriceHistoryChart({
         <XAxis dataKey="date" fontSize={11} />
         <YAxis fontSize={12} unit="€" />
         <Tooltip formatter={(v) => [`€ ${v}`, '']} />
-        <Line type="monotone" dataKey="inkoop" stroke="#19445B" connectNulls dot={false} />
-        <Line type="monotone" dataKey="verkoop" stroke="#F26B21" connectNulls dot={false} />
+        <Line
+          type="monotone"
+          dataKey="inkoop"
+          stroke="#111111"
+          connectNulls
+          dot={false}
+          strokeWidth={2}
+        />
+        <Line
+          type="monotone"
+          dataKey="verkoop"
+          stroke="#2563B8"
+          connectNulls
+          dot={false}
+          strokeWidth={2}
+        />
       </LineChart>
     </ResponsiveContainer>
   );

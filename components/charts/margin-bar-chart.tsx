@@ -10,7 +10,7 @@ export function MarginBarChart({ data }: { data: Array<{ brand: string; avgMargi
         <XAxis dataKey="brand" fontSize={12} />
         <YAxis fontSize={12} unit="%" />
         <Tooltip formatter={(v) => [`${v}%`, 'Gem. marge']} />
-        <Bar dataKey="avgMarginPct" fill="#F26B21" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="avgMarginPct" fill="#FFD200" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
