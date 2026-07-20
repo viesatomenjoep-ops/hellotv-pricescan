@@ -188,15 +188,15 @@ const VERKOPEN = [
 ];
 
 const TAKEN = [
-  { titel: 'Voorraad OLED C4 aanvullen Groningen', persoon_id: 'youri', status: 'te-doen' },
+  { titel: 'Voorraad LG OLED evo C5 aanvullen Groningen', persoon_id: 'youri', status: 'te-doen' },
   { titel: 'Prijsafspraak Hotel Zon bevestigen', persoon_id: 'mees', status: 'te-doen' },
-  { titel: 'Demo The Frame opzetten etalage', persoon_id: 'fleur', status: 'te-doen' },
-  { titel: 'VMS-afwijking Neo QLED uitzoeken', persoon_id: 'ivo', status: 'bezig' },
-  { titel: 'Marge-actie Sony Bravia 7 opstellen', persoon_id: 'calvin', status: 'bezig' },
+  { titel: 'Samsung The Frame etalage opzetten', persoon_id: 'fleur', status: 'te-doen' },
+  { titel: 'VMS-afwijking Samsung Neo QLED QN90F uitzoeken', persoon_id: 'ivo', status: 'bezig' },
+  { titel: 'Marge-actie Sony BRAVIA 8 II opstellen', persoon_id: 'calvin', status: 'bezig' },
   { titel: 'Offerte Marije de Vries nabellen', persoon_id: 'sanne', status: 'review' },
-  { titel: 'Retour LG G4 verwerken', persoon_id: 'youri', status: 'review' },
+  { titel: 'Retour LG OLED evo G5 verwerken', persoon_id: 'youri', status: 'review' },
   { titel: 'Weekrapport marges afronden', persoon_id: 'ivo', status: 'klaar' },
-  { titel: 'Trainingsmoment nieuwe TCL-lijn', persoon_id: 'mees', status: 'klaar' },
+  { titel: 'Trainingsmoment nieuwe TCL C-serie', persoon_id: 'mees', status: 'klaar' },
 ];
 
 const BIJVERKOOP = [
@@ -352,10 +352,10 @@ async function main() {
     })),
   );
   await ins('notificaties', [
-    { type: 'voorraad', tekst: 'LG OLED evo C4 laag op voorraad in Groningen', gelezen: false },
-    { type: 'marge', tekst: 'Sony Bravia 7 onder marge-drempel na inkoopstijging', gelezen: false },
-    { type: 'verkoop', tekst: 'Nieuwe lead: Samsung OLED S90D — Peter Jansen', gelezen: false },
-    { type: 'systeem', tekst: 'VMS-sync voltooid — 84 regels bijgewerkt', gelezen: true },
+    { type: 'voorraad', tekst: 'LG OLED evo C5 65" laag op voorraad in Rotterdam', gelezen: false },
+    { type: 'marge', tekst: 'Sony BRAVIA 8 II onder marge-drempel na inkoopstijging', gelezen: false },
+    { type: 'verkoop', tekst: 'Nieuwe lead: Samsung OLED S95F 65" — Peter Jansen', gelezen: false },
+    { type: 'systeem', tekst: 'VMS-sync voltooid — 368 modellen bijgewerkt', gelezen: true },
   ]);
   const today = new Date();
   const iso = (d: number) =>
@@ -366,19 +366,19 @@ async function main() {
       tijd: '10:00',
       titel: 'Teamoverleg marges',
       type: 'activiteit',
-      locatie: 'Amsterdam',
+      locatie: 'Rotterdam',
     },
     {
       datum: iso(today.getDate() + 1),
       tijd: '14:30',
-      titel: 'Levering Hotel Zon (TCL C805)',
+      titel: 'Levering Hotel Zon (TCL C8K 75")',
       type: 'herinnering',
       locatie: 'Eindhoven',
     },
     {
       datum: iso(today.getDate() + 3),
       tijd: '11:00',
-      titel: 'Demo The Frame opzetten',
+      titel: 'Samsung The Frame etalage opzetten',
       type: 'activiteit',
       locatie: 'Groningen',
     },

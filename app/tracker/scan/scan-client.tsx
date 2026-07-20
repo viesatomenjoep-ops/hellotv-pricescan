@@ -168,12 +168,17 @@ export function ScanClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initieelToestelId]);
 
-  // Demo zonder hardware: pakt een willekeurig toestel op voorraad.
+  // Demo zonder hardware: pakt een premium topmodel op voorraad (mooi om uit te lichten).
   function demoScan() {
     setScanning(true);
     const opVoorraad = data.toestellen.filter((t) => t.voorraadTotaal > 0);
+    // Voorkeur voor OLED/premium met de hoogste ticketprijs; anders duurste op voorraad.
+    const showcase = opVoorraad
+      .filter((t) => t.klasse === 'OLED' || t.ticket_c >= 150000)
+      .sort((a, b) => b.ticket_c - a.ticket_c);
+    const pool = (showcase.length ? showcase : opVoorraad).slice(0, 12);
     setTimeout(() => {
-      const pick = opVoorraad[Math.floor(Math.random() * opVoorraad.length)] ?? data.toestellen[0];
+      const pick = pool[Math.floor(Math.random() * pool.length)] ?? data.toestellen[0];
       setScanning(false);
       if (pick) kies(pick);
     }, 900);
