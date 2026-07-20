@@ -20,6 +20,9 @@ const TCL: Serie[] = [
   { merk: 'TCL', familie: 'P8L Mini-LED', panel: 'Mini-LED', jaar: 2026, segment: 'mid', pattern: '{inch}P8L', sizes: [55, 65, 75, 85], anchors: [{ inch: 55, eur: 699 }, { inch: 65, eur: 999 }] },
   { merk: 'TCL', familie: 'X11L Mini-LED', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: '{inch}X11L', sizes: [75, 85, 98], anchors: [{ inch: 75, eur: 4299 }, { inch: 98, eur: 8999 }] },
   { merk: 'TCL', familie: 'RM9L RGB-Mini LED', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: '{inch}RM9L', sizes: [85, 98, 115], anchors: [{ inch: 85, eur: 5999 }, { inch: 115, eur: 12999 }] },
+  // 2026-uitbreiding
+  { merk: 'TCL', familie: 'C6L QLED', panel: 'QLED', jaar: 2026, segment: 'budget', pattern: '{inch}C6L', sizes: [55, 65, 75, 85, 98], anchors: [{ inch: 55, eur: 799 }, { inch: 65, eur: 999 }] },
+  { merk: 'TCL', familie: 'RM7L RGB-Mini LED', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: '{inch}RM7L', sizes: [65, 75, 85], anchors: [{ inch: 65, eur: 2499 }, { inch: 85, eur: 3999 }] },
 ];
 
 // ── LG (OLED = 'OLED'; QNED MiniLED = 'Mini-LED'; QNED edge-lit = 'QLED'; UHD = 'LED') ──────
@@ -40,6 +43,11 @@ const LG: Serie[] = [
   { merk: 'LG', familie: 'OLED evo G6', panel: 'OLED', jaar: 2026, segment: 'premium', pattern: 'OLED{inch}G6', sizes: [55, 65, 77, 83, 97], anchors: [{ inch: 55, eur: 2799 }, { inch: 65, eur: 3499 }] },
   { merk: 'LG', familie: 'OLED evo C6', panel: 'OLED', jaar: 2026, segment: 'premium', pattern: 'OLED{inch}C6', sizes: [42, 48, 55, 65, 77, 83], anchors: [{ inch: 55, eur: 1999 }, { inch: 65, eur: 2699 }] },
   { merk: 'LG', familie: 'OLED B6', panel: 'OLED', jaar: 2026, segment: 'mid', pattern: 'OLED{inch}B6', sizes: [48, 55, 65, 77, 83], anchors: [{ inch: 55, eur: 1299 }, { inch: 65, eur: 1699 }] },
+  // 2026-uitbreiding (QNED-jaarsuffix A6→B; UHD UA→UB)
+  { merk: 'LG', familie: 'QNED evo QNED93 (2026)', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: '{inch}QNED93B', sizes: [55, 65, 75, 85], anchors: [{ inch: 65, eur: 1899 }] },
+  { merk: 'LG', familie: 'QNED evo QNED86 (2026)', panel: 'Mini-LED', jaar: 2026, segment: 'mid', pattern: '{inch}QNED86B', sizes: [50, 55, 65, 75, 86], anchors: [{ inch: 55, eur: 899 }, { inch: 65, eur: 1149 }] },
+  { merk: 'LG', familie: 'QNED80 (2026)', panel: 'QLED', jaar: 2026, segment: 'mid', pattern: '{inch}QNED80B', sizes: [50, 55, 65, 75, 86], anchors: [{ inch: 55, eur: 699 }, { inch: 65, eur: 849 }] },
+  { merk: 'LG', familie: 'UHD UB80', panel: 'LED', jaar: 2026, segment: 'budget', pattern: '{inch}UB80006LB', sizes: [43, 50, 55, 65, 75, 86], anchors: [{ inch: 50, eur: 449 }, { inch: 65, eur: 649 }] },
 ];
 // ── Samsung (QE = QLED/OLED/Neo; UE = Crystal UHD; 2025 = F, 2026 = H) ───────
 const SAMSUNG: Serie[] = [
@@ -66,6 +74,12 @@ const SAMSUNG: Serie[] = [
   { merk: 'Samsung', familie: 'The Frame LS03H', panel: 'QLED', jaar: 2026, segment: 'mid', pattern: 'QE{inch}LS03H', sizes: [43, 50, 55, 65, 75, 85], anchors: [{ inch: 43, eur: 1349 }, { inch: 55, eur: 1699 }] },
   { merk: 'Samsung', familie: 'The Frame Pro LS03HW', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: 'QE{inch}LS03HW', sizes: [55, 65, 75, 85], anchors: [{ inch: 55, eur: 1699 }, { inch: 65, eur: 2199 }] },
   { merk: 'Samsung', familie: 'Crystal UHD U7000H', panel: 'LED', jaar: 2026, segment: 'budget', pattern: 'UE{inch}U7000H', sizes: [43, 50, 55, 65, 75, 85], anchors: [{ inch: 55, eur: 449 }, { inch: 65, eur: 599 }] },
+  // 2026-uitbreiding
+  { merk: 'Samsung', familie: 'OLED S99H', panel: 'QD-OLED', jaar: 2026, segment: 'premium', pattern: 'QE{inch}S99H', sizes: [55, 65, 77, 83], anchors: [{ inch: 65, eur: 3999 }, { inch: 77, eur: 5499 }] },
+  { merk: 'Samsung', familie: 'Micro RGB R95H', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: 'QE{inch}R95H', sizes: [75, 85, 98], anchors: [{ inch: 75, eur: 3299 }, { inch: 98, eur: 6999 }] },
+  { merk: 'Samsung', familie: 'Micro RGB R85H', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: 'QE{inch}R85H', sizes: [55, 65, 75, 85], anchors: [{ inch: 55, eur: 1399 }, { inch: 65, eur: 1799 }] },
+  { merk: 'Samsung', familie: 'Neo QLED Mini LED M80H', panel: 'Mini-LED', jaar: 2026, segment: 'mid', pattern: 'QE{inch}M80H', sizes: [55, 65, 75, 85], anchors: [{ inch: 55, eur: 899 }, { inch: 65, eur: 1099 }] },
+  { merk: 'Samsung', familie: 'Neo QLED Mini LED M70H', panel: 'Mini-LED', jaar: 2026, segment: 'budget', pattern: 'QE{inch}M70H', sizes: [43, 50, 55, 65, 75, 85], anchors: [{ inch: 43, eur: 499 }, { inch: 55, eur: 699 }] },
 ];
 
 // ── Sony BRAVIA (K-{inch}{serie}) ────────────────────────────────────────────
@@ -99,6 +113,10 @@ const PHILIPS: Serie[] = [
   { merk: 'Philips', familie: 'OLED 811', panel: 'OLED', jaar: 2026, segment: 'mid', pattern: '{inch}OLED811/12', sizes: [42, 48, 55, 65, 77], anchors: [{ inch: 55, eur: 1499 }, { inch: 65, eur: 1899 }] },
   { merk: 'Philips', familie: 'OLED 761', panel: 'OLED', jaar: 2026, segment: 'mid', pattern: '{inch}OLED761/12', sizes: [55, 65, 77], anchors: [{ inch: 55, eur: 1199 }] },
   { merk: 'Philips', familie: 'The One PQS9001', panel: 'QLED', jaar: 2026, segment: 'mid', pattern: '{inch}PQS9001/12', sizes: [43, 50, 55, 65, 75, 85, 100], anchors: [{ inch: 55, eur: 849 }, { inch: 65, eur: 1049 }] },
+  // 2026-uitbreiding (LED-instap eindigt op 1)
+  { merk: 'Philips', familie: 'MLED981 RGB Mini-LED', panel: 'Mini-LED', jaar: 2026, segment: 'premium', pattern: '{inch}MLED981/12', sizes: [75, 85], anchors: [{ inch: 85, eur: 3499 }] },
+  { merk: 'Philips', familie: 'PUS8501', panel: 'LED', jaar: 2026, segment: 'budget', pattern: '{inch}PUS8501/12', sizes: [43, 50, 55, 65, 75], anchors: [{ inch: 50, eur: 599 }, { inch: 65, eur: 749 }] },
+  { merk: 'Philips', familie: 'PUS8001', panel: 'LED', jaar: 2026, segment: 'budget', pattern: '{inch}PUS8001/12', sizes: [43, 50, 55, 65, 75], anchors: [{ inch: 43, eur: 449 }, { inch: 55, eur: 599 }] },
 ];
 
 export const SERIES: Serie[] = [...TCL, ...SAMSUNG, ...LG, ...SONY, ...PHILIPS];
