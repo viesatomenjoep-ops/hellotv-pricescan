@@ -4,6 +4,10 @@
     {
       "path": "/api/sync",
       "schedule": "0 4-19/2 * * *"
+    },
+    {
+      "path": "/api/staleness-check",
+      "schedule": "30 6-20 * * *"
     }
   ]
 }
