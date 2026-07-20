@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Tv, Boxes, TrendingUp, ListChecks } from 'lucide-react';
 import { getDashboard, getTarget } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,10 +18,20 @@ export default async function TrackerDashboard() {
   const [d, target] = await Promise.all([getDashboard(), getTarget()]);
 
   const kpis = [
-    { label: 'Toestellen', value: d.toestellen },
-    { label: 'Voorraad totaal', value: d.voorraadTotaal },
-    { label: 'Open pipeline', value: d.pipeline.lead + d.pipeline.offerte },
-    { label: 'Open taken', value: d.takenOpen },
+    { label: 'Toestellen', value: d.toestellen, icon: Tv, tint: 'bg-blue-100 text-blue-700' },
+    { label: 'Voorraad', value: d.voorraadTotaal, icon: Boxes, tint: 'bg-teal-100 text-teal-700' },
+    {
+      label: 'Open pipeline',
+      value: d.pipeline.lead + d.pipeline.offerte,
+      icon: TrendingUp,
+      tint: 'bg-amber-100 text-amber-700',
+    },
+    {
+      label: 'Open taken',
+      value: d.takenOpen,
+      icon: ListChecks,
+      tint: 'bg-violet-100 text-violet-700',
+    },
   ];
 
   return (
@@ -35,9 +46,14 @@ export default async function TrackerDashboard() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {kpis.map((k) => (
           <Card key={k.label}>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{k.label}</p>
-              <p className="mt-1 text-2xl font-bold">{k.value}</p>
+            <CardContent className="flex items-center gap-3 p-4">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${k.tint}`}>
+                <k.icon className="h-5 w-5" strokeWidth={1.75} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-xs text-muted-foreground">{k.label}</span>
+                <span className="block text-2xl font-bold leading-tight">{k.value}</span>
+              </span>
             </CardContent>
           </Card>
         ))}
