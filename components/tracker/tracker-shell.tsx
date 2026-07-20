@@ -167,7 +167,8 @@ export function TrackerShell({
         <header className="flex items-center justify-between gap-4 border-b bg-background px-4 py-2">
           <input
             placeholder="Zoek op typenummer, model of EAN…"
-            className="h-9 w-full max-w-md rounded-full border bg-muted/50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Zoeken"
+            className="h-10 w-full max-w-md rounded-full border bg-muted/50 px-4 text-base focus:outline-none focus:ring-2 focus:ring-ring md:h-9 md:text-sm"
           />
           <div className="flex items-center gap-3">
             {notifAan && (
@@ -185,7 +186,7 @@ export function TrackerShell({
                   )}
                 </button>
                 {notifOpen && (
-                  <div className="absolute right-0 top-11 z-50 w-72 rounded-lg border bg-background p-2 shadow-lg">
+                  <div className="absolute right-0 top-11 z-50 w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border bg-background p-2 shadow-lg">
                     <div className="flex items-center justify-between px-1 pb-1">
                       <span className="text-xs font-semibold text-muted-foreground">Notificaties</span>
                       {ongelezen > 0 && (
@@ -228,11 +229,11 @@ export function TrackerShell({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">{children}</main>
+        <main className="pb-nav flex-1 overflow-y-auto md:pb-0">{children}</main>
       </div>
 
       {/* Bottom-nav (mobiel) */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t bg-background py-1 md:hidden">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t bg-background py-1 md:hidden">
         {BOTTOM.map((i) => {
           const center = i.label === 'Scan';
           return (

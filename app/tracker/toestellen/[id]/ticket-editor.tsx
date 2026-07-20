@@ -31,10 +31,12 @@ export function TicketEditor({ id, ticketC }: { id: number; ticketC: number }) {
     <span className="inline-flex items-center gap-2">
       <Input
         type="number"
+        inputMode="numeric"
         value={waarde}
         onChange={(e) => setWaarde(e.target.value)}
         onBlur={save}
-        className="h-8 w-24"
+        aria-label="Ticketprijs in euro"
+        className="h-10 w-28 md:h-9 md:w-24"
       />
       <span className="text-xs text-muted-foreground">€ · manager</span>
       {pending && <span className="text-xs text-muted-foreground">…</span>}

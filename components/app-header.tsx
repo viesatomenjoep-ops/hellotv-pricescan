@@ -30,9 +30,9 @@ export async function AppHeader() {
   const nav = items.filter((n) => user.role && n.roles.includes(user.role));
 
   return (
-    <header className="flex items-center justify-between gap-4 bg-foreground px-4 py-2 text-background">
-      <div className="flex items-center gap-6">
-        <Link href="/" className="flex items-center gap-2">
+    <header className="flex items-center justify-between gap-3 bg-foreground px-3 py-2 text-background sm:px-4">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image
             src="/hellotv-logo-white.png"
             alt="helloTV"
@@ -41,18 +41,22 @@ export async function AppHeader() {
             priority
             className="h-7 w-auto"
           />
-          <span className="text-sm font-semibold opacity-90">PriceScan</span>
+          <span className="hidden text-sm font-semibold opacity-90 sm:inline">PriceScan</span>
         </Link>
-        <nav className="flex gap-4 text-sm">
+        <nav className="flex gap-4 overflow-x-auto text-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {nav.map((n) => (
-            <Link key={n.href} href={n.href} className="opacity-80 hover:opacity-100">
+            <Link
+              key={n.href}
+              href={n.href}
+              className="shrink-0 whitespace-nowrap py-1 opacity-80 hover:opacity-100"
+            >
               {n.label}
             </Link>
           ))}
         </nav>
       </div>
-      <div className="flex items-center gap-3 text-sm">
-        <span className="opacity-80">
+      <div className="flex shrink-0 items-center gap-3 text-sm">
+        <span className="hidden opacity-80 sm:inline">
           {user.fullName ?? user.email}
           {user.role && ` · ${ROLE_LABEL[user.role] ?? user.role}`}
         </span>

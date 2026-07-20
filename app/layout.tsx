@@ -30,6 +30,7 @@ export const viewport: Viewport = {
   themeColor: '#111111',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover', // laat content tot achter de notch/home-indicator lopen
 };
 
 export default function RootLayout({

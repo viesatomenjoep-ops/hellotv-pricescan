@@ -56,3 +56,21 @@
 .font-logo {
   font-family: var(--font-logo), system-ui, sans-serif;
 }
+
+/* Safe-area helpers (iPhone notch/home-indicator, viewport-fit=cover). */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+/* Onderrand-ruimte zodat de vaste bottom-nav content nooit afdekt. */
+.pb-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* Voorkom horizontale overflow op mobiel als bron. */
+html,
+body {
+  overflow-x: hidden;
+}

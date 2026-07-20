@@ -131,10 +131,11 @@ export function AanbiedingSheet({
               type="range"
               min={toestel.min_marge_c}
               max={toestel.ticket_c}
-              step={1000}
+              step={500}
               value={Math.min(Math.max(prijs, toestel.min_marge_c), toestel.ticket_c)}
               onChange={(e) => setPrijs(Number(e.target.value))}
-              className="w-full accent-[color:hsl(var(--primary))]"
+              aria-label="Prijs binnen speling"
+              className="h-8 w-full touch-manipulation accent-[color:hsl(var(--primary))]"
             />
           </div>
 

@@ -46,6 +46,13 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
     verplaats(id, VOLGORDE[Math.min(idx + 1, VOLGORDE.length - 1)]);
   }
 
+  function terug(id: string) {
+    const huidig = items.find((v) => v.id === id);
+    if (!huidig) return;
+    const idx = VOLGORDE.indexOf(huidig.status);
+    verplaats(id, VOLGORDE[Math.max(idx - 1, 0)]);
+  }
+
   const waarde = items.reduce((s, v) => s + v.waarde_c, 0);
 
   return (
@@ -57,7 +64,7 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        Sleep een kaart naar een andere fase, of tik → op mobiel.
+        Sleep een kaart (desktop) of gebruik de knoppen ‹ Volgende › om een deal te verplaatsen.
       </p>
 
       <div className="grid gap-3 md:grid-cols-4">
@@ -104,20 +111,39 @@ export function VerkopenClient({ verkopen }: { verkopen: VerkoopRow[] }) {
                     sleep === v.id ? 'opacity-50' : ''
                   }`}
                 >
-                  <CardContent className="space-y-1 p-3">
-                    <p className="text-sm font-medium">{v.model}</p>
-                    <p className="text-xs text-muted-foreground">{v.klant}</p>
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-sm font-semibold">{formatEuro(v.waarde_c)}</span>
-                      {f.key !== 'geleverd' && (
+                  <CardContent className="space-y-2 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{v.model}</p>
+                        <p className="truncate text-xs text-muted-foreground">{v.klant}</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold">
+                        {formatEuro(v.waarde_c)}
+                      </span>
+                    </div>
+                    {/* Touch-bediening: op mobiel werkt slepen niet, dus knoppen. */}
+                    <div className="flex items-center gap-2">
+                      {f.key !== 'lead' && (
                         <Button
                           size="sm"
                           variant="ghost"
+                          className="h-9 px-2 text-muted-foreground"
+                          onClick={() => terug(v.id)}
+                          disabled={pending}
+                          aria-label="Vorige fase"
+                        >
+                          ‹
+                        </Button>
+                      )}
+                      {f.key !== 'geleverd' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 flex-1"
                           onClick={() => advance(v.id)}
                           disabled={pending}
-                          aria-label="Volgende fase"
                         >
-                          →
+                          Volgende ›
                         </Button>
                       )}
                     </div>

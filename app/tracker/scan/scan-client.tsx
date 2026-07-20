@@ -399,7 +399,7 @@ export function ScanClient({
       {/* Verkoper-view: marges */}
       {!klantView && calc && (
         <Card>
-          <CardContent className="grid grid-cols-2 gap-4 p-4 text-sm">
+          <CardContent className="grid grid-cols-2 gap-2 p-4 text-sm sm:gap-4">
             <div className="col-span-2 rounded-lg bg-muted/50 p-3">
               <p className="text-xs text-muted-foreground">Lifetime-marge (dit model)</p>
               <p className="text-2xl font-bold">{formatEuro(selected.lifetimeMargeC)}</p>
@@ -451,19 +451,26 @@ export function ScanClient({
             <span className="text-sm text-muted-foreground">Dealprijs</span>
             <span className="text-lg font-bold">{formatEuro(dealPrice)}</span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {[-200, -100, -50, 50].map((d) => (
-              <Button key={d} size="sm" variant="outline" onClick={() => adjust(d)}>
+              <Button
+                key={d}
+                variant="outline"
+                onClick={() => adjust(d)}
+                className="h-11 px-0 text-base tabular-nums"
+              >
                 {d > 0 ? `+${d}` : d}
               </Button>
             ))}
-            <Input
-              type="number"
-              value={Math.round(dealPrice / 100)}
-              onChange={(e) => setDealPrice(Math.max(0, Number(e.target.value) * 100))}
-              className="h-9 w-28"
-            />
           </div>
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={Math.round(dealPrice / 100)}
+            onChange={(e) => setDealPrice(Math.max(0, Number(e.target.value) * 100))}
+            className="h-11 w-full text-base"
+            aria-label="Dealprijs in euro"
+          />
           {calc && (
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
               <span>Korting: {calc.korting.toFixed(1)}%</span>

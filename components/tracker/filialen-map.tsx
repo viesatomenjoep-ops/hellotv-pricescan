@@ -58,7 +58,7 @@ export function FilialenMap({ filialen }: { filialen: MapFiliaal[] }) {
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto w-full max-w-[420px]" role="img" aria-label="Kaart van de filialen">
+      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto max-h-[60vh] w-full max-w-[420px]" role="img" aria-label="Kaart van de filialen">
         {/* achtergrondvlak + subtiel raster */}
         <rect x="1" y="1" width={W - 2} height={H - 2} rx="14" className="fill-muted/40 stroke-border" />
         {Array.from({ length: 5 }, (_, i) => (
