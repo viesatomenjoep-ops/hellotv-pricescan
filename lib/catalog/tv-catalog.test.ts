@@ -11,13 +11,13 @@ describe('TV-catalogus', () => {
   });
 
   it('bevat uitsluitend modeljaar 2025 en 2026', () => {
-    const jaren = new Set(cat.map((c) => c.jaar));
-    expect([...jaren].sort()).toEqual([2025, 2026]);
+    const jaren = Array.from(new Set(cat.map((c) => c.jaar))).sort();
+    expect(jaren).toEqual([2025, 2026]);
   });
 
   it('verkoopt alleen de vijf helloTV-merken (geen Hisense)', () => {
-    const merken = new Set(cat.map((c) => c.merk));
-    expect([...merken].sort()).toEqual(['LG', 'Philips', 'Samsung', 'Sony', 'TCL']);
+    const merken = Array.from(new Set(cat.map((c) => c.merk))).sort();
+    expect(merken).toEqual(['LG', 'Philips', 'Samsung', 'Sony', 'TCL']);
   });
 
   it('heeft unieke keys, typenummers en EANs', () => {
