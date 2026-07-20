@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { createClient } from './server';
+import { isStale } from '@/lib/pricing/staleness';
 
 const priceFieldSchema = z.enum(['purchase', 'sale']);
 
@@ -91,10 +92,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const withoutTag = (products ?? []).filter((p) => !tagSet.has(p.id)).length;
 
   const finishedAt = sync?.finished_at ?? null;
-  const ageHours = finishedAt
-    ? (Date.now() - new Date(finishedAt).getTime()) / 3_600_000
-    : Infinity;
-  const stale = !sync || sync.status !== 'success' || ageHours > 4;
+  const stale = !sync || sync.status !== 'success' || isStale(finishedAt);
 
   return {
     lastSync: sync

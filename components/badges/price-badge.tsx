@@ -1,5 +1,12 @@
 import { formatEuro } from '@/lib/pricing/margin';
+import { stalenessTone } from '@/lib/pricing/staleness';
 import { cn } from '@/lib/utils';
+
+const TONE_CLASS = {
+  fresh: 'bg-green-100 text-green-800',
+  aging: 'bg-orange-100 text-orange-800',
+  stale: 'bg-red-100 text-red-800',
+} as const;
 
 // Inkoopprijs met actualiteitskleur: groen < 2u, oranje 2–4u, rood > 4u (C6).
 export function PriceBadge({
@@ -13,15 +20,7 @@ export function PriceBadge({
 }) {
   if (cents == null) return <span className="text-muted-foreground">—</span>;
 
-  const ageHours = lastSyncedAt
-    ? (Date.now() - new Date(lastSyncedAt).getTime()) / 3_600_000
-    : Infinity;
-  const tone =
-    ageHours < 2
-      ? 'bg-green-100 text-green-800'
-      : ageHours <= 4
-        ? 'bg-orange-100 text-orange-800'
-        : 'bg-red-100 text-red-800';
+  const tone = stalenessTone(lastSyncedAt);
   const title = lastSyncedAt
     ? `Laatst gesynct: ${new Date(lastSyncedAt).toLocaleString('nl-NL')}`
     : 'Nog niet gesynct';
@@ -31,12 +30,12 @@ export function PriceBadge({
       title={title}
       className={cn(
         'inline-flex items-center rounded px-2 py-0.5 text-sm font-medium',
-        tone,
+        TONE_CLASS[tone],
         className,
       )}
     >
       {formatEuro(cents)}
-      {ageHours > 4 && ' ⚠︎'}
+      {tone === 'stale' && ' ⚠︎'}
     </span>
   );
 }
