@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import { requireRole } from '@/lib/auth';
 import { getDashboardData, getMarginByBrand, getRecentPriceChanges } from '@/lib/supabase/reports';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,8 +122,17 @@ export default async function DashboardPage() {
               {marginDrops.map((c) => (
                 <li key={c.id} className="flex justify-between">
                   <span>{c.model_name}</span>
-                  <span className="text-muted-foreground">
-                    {c.field === 'purchase' ? 'inkoop ↑' : 'verkoop ↓'} {c.delta_pct}%
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    {c.field === 'purchase' ? (
+                      <>
+                        inkoop <ArrowUp className="h-3.5 w-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        verkoop <ArrowDown className="h-3.5 w-3.5" />
+                      </>
+                    )}{' '}
+                    {c.delta_pct}%
                   </span>
                 </li>
               ))}

@@ -1,3 +1,4 @@
+import { CircleCheck } from 'lucide-react';
 import { requireRole } from '@/lib/auth';
 import { getMatchQueue } from '@/lib/supabase/reports';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,8 +19,8 @@ export default async function MatchingPage() {
 
       {items.length === 0 && (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
-            Geen openstaande matches. 🎉
+          <CardContent className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+            <CircleCheck className="h-4 w-4 text-green-600" /> Geen openstaande matches.
           </CardContent>
         </Card>
       )}

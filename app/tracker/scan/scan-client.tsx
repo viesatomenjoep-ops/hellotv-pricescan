@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Radio, ScanLine, CircleCheck, TriangleAlert, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -236,15 +237,23 @@ export function ScanClient({
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
             <div
-              className={`flex h-20 w-20 items-center justify-center rounded-full text-4xl ${
+              className={`flex h-20 w-20 items-center justify-center rounded-full ${
                 flash === 'ok'
-                  ? 'bg-green-100'
+                  ? 'bg-green-100 text-green-700'
                   : flash === 'error'
-                    ? 'bg-red-100'
-                    : 'bg-primary/15'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-primary/15 text-foreground'
               } ${scanning ? 'animate-pulse' : ''}`}
             >
-              {scanning ? '📡' : flash === 'ok' ? '✅' : flash === 'error' ? '⚠️' : '📺'}
+              {scanning ? (
+                <Radio className="h-9 w-9" />
+              ) : flash === 'ok' ? (
+                <CircleCheck className="h-9 w-9" />
+              ) : flash === 'error' ? (
+                <TriangleAlert className="h-9 w-9" />
+              ) : (
+                <ScanLine className="h-9 w-9" />
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               Scan een RFID-chip of barcode met de handheld — of voer de code hieronder in.
@@ -434,8 +443,8 @@ export function ScanClient({
             {serviceAan && (
               <ul className="grid grid-cols-2 gap-1 pt-2 text-sm">
                 {SERVICE.map((s) => (
-                  <li key={s} className="flex items-center gap-1">
-                    <span className="text-primary">✓</span> {s}
+                  <li key={s} className="flex items-center gap-1.5">
+                    <Check className="h-4 w-4 shrink-0 text-primary" /> {s}
                   </li>
                 ))}
               </ul>
@@ -476,7 +485,9 @@ export function ScanClient({
               <span>Korting: {calc.korting.toFixed(1)}%</span>
               {!klantView && <span>Speling: {formatEuro(calc.speling)}</span>}
               {calc.onderMin && (
-                <span className="font-semibold text-red-700">⚠︎ Onder min-marge</span>
+                <span className="inline-flex items-center gap-1 font-semibold text-red-700">
+                  <TriangleAlert className="h-3.5 w-3.5" /> Onder min-marge
+                </span>
               )}
             </div>
           )}

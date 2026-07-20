@@ -1,3 +1,4 @@
+import { CircleCheck } from 'lucide-react';
 import { requireRole } from '@/lib/auth';
 import { getPendingQuarantine } from '@/lib/supabase/reports';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,8 +22,8 @@ export default async function QuarantinePage() {
 
       {items.length === 0 && (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
-            Geen openstaande wijzigingen. 🎉
+          <CardContent className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+            <CircleCheck className="h-4 w-4 text-green-600" /> Geen openstaande wijzigingen.
           </CardContent>
         </Card>
       )}

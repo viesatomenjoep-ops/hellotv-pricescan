@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import { formatEuro } from '@/lib/pricing/margin';
 import { stalenessTone } from '@/lib/pricing/staleness';
 import { cn } from '@/lib/utils';
@@ -35,7 +36,7 @@ export function PriceBadge({
       )}
     >
       {formatEuro(cents)}
-      {tone === 'stale' && ' ⚠︎'}
+      {tone === 'stale' && <TriangleAlert className="ml-1 h-3.5 w-3.5" />}
     </span>
   );
 }

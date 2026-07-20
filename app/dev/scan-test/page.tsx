@@ -39,7 +39,7 @@ export default function ScanTestPage() {
               : 'bg-muted/30')
         }
       >
-        {flash === 'ok' ? 'Scan ✓' : flash === 'error' ? 'Ongeldige code' : 'Wachten op scan…'}
+        {flash === 'ok' ? 'Scan herkend' : flash === 'error' ? 'Ongeldige code' : 'Wachten op scan…'}
       </div>
 
       <ul className="divide-y rounded-md border">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CircleCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getUnmatchedProducts, type ProductListItem } from '@/lib/supabase/queries';
@@ -35,8 +36,8 @@ export default async function UnmatchedPage() {
 
       {!error && products.length === 0 && (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
-            Alles gematcht. 🎉
+          <CardContent className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+            <CircleCheck className="h-4 w-4 text-green-600" /> Alles gematcht.
           </CardContent>
         </Card>
       )}

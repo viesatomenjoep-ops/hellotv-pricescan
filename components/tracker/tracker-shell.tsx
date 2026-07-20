@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition, type ReactNode } from 'react';
+import { House, Boxes, ScanLine, Lightbulb, Ellipsis, Bell, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SignOutButton } from '@/components/sign-out-button';
 import { useFlag } from './flags-provider';
@@ -20,6 +21,7 @@ interface NavItem {
   href: string;
   label: string;
   flag?: string;
+  icon?: LucideIcon;
 }
 interface NavSection {
   title: string;
@@ -68,11 +70,11 @@ const SECTIONS: NavSection[] = [
 ];
 
 const BOTTOM: NavItem[] = [
-  { href: '/tracker', label: 'Home' },
-  { href: '/tracker/voorraad', label: 'Voorraad' },
-  { href: '/tracker/scan', label: 'Scan' },
-  { href: '/tracker/aanbevelingen', label: 'Tips' },
-  { href: '/tracker/overig', label: 'Meer' },
+  { href: '/tracker', label: 'Home', icon: House },
+  { href: '/tracker/voorraad', label: 'Voorraad', icon: Boxes },
+  { href: '/tracker/scan', label: 'Scan', icon: ScanLine },
+  { href: '/tracker/aanbevelingen', label: 'Tips', icon: Lightbulb },
+  { href: '/tracker/overig', label: 'Meer', icon: Ellipsis },
 ];
 
 function useVisibleSections(): NavSection[] {
@@ -178,7 +180,7 @@ export function TrackerShell({
                   className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted"
                   aria-label="Notificaties"
                 >
-                  <span className="text-lg">🔔</span>
+                  <Bell className="h-5 w-5" />
                   {ongelezen > 0 && (
                     <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                       {ongelezen}
@@ -236,6 +238,7 @@ export function TrackerShell({
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t bg-background py-1 md:hidden">
         {BOTTOM.map((i) => {
           const center = i.label === 'Scan';
+          const Icon = i.icon;
           return (
             <Link
               key={i.href}
@@ -255,7 +258,7 @@ export function TrackerShell({
                       : 'text-muted-foreground',
                 )}
               >
-                {center ? '⌾' : ''}
+                {Icon && <Icon className={center ? 'h-6 w-6' : 'h-5 w-5'} strokeWidth={2} />}
               </span>
               <span className={cn(isActive(i.href) && !center && 'text-foreground')}>
                 {i.label}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { Mic, Printer, Mail, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatEuro } from '@/lib/pricing/margin';
@@ -159,8 +160,15 @@ export function AanbiedingSheet({
                 onChange={(e) => setNotitie(e.target.value)}
                 placeholder="Notitie…"
               />
-              <Button type="button" variant="outline" onClick={spraak} disabled={luistert}>
-                {luistert ? '🎙️…' : '🎙️'}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={spraak}
+                disabled={luistert}
+                aria-label="Spraaknotitie"
+              >
+                <Mic className={luistert ? 'h-4 w-4 animate-pulse text-red-600' : 'h-4 w-4'} />
               </Button>
             </div>
           )}
@@ -168,16 +176,19 @@ export function AanbiedingSheet({
           {msg && <p className="text-sm font-medium text-green-700">{msg}</p>}
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={bevestig}>Bevestig</Button>
-            <Button variant="secondary" onClick={() => window.print()}>
-              Printen / PDF
+            <Button onClick={bevestig} className="gap-1.5">
+              <Check className="h-4 w-4" /> Bevestig
+            </Button>
+            <Button variant="secondary" onClick={() => window.print()} className="gap-1.5">
+              <Printer className="h-4 w-4" /> Printen / PDF
             </Button>
             {mailAan && (
               <Button
                 variant="secondary"
+                className="gap-1.5"
                 onClick={() => setMsg('Mail naar klant verstuurd (stub — Edge Function volgt).')}
               >
-                Mail klant
+                <Mail className="h-4 w-4" /> Mail klant
               </Button>
             )}
             <Button variant="ghost" onClick={onClose} className="ml-auto">

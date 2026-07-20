@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Trophy } from 'lucide-react';
 import { getToestellenMetVoorraad } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +35,9 @@ export default async function AanbevelingenPage() {
             <Link href={`/tracker/toestellen/${t.id}`} className="block">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <Badge>{['🥇', '🥈', '🥉'][i]} Topper</Badge>
+                <Badge className="gap-1">
+                  <Trophy className="h-3.5 w-3.5" /> Topper {i + 1}
+                </Badge>
                 <span className="text-lg font-bold">{t.score}</span>
               </div>
               <p className="mt-2 text-sm font-medium">{t.model}</p>

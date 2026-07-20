@@ -1,10 +1,12 @@
+import { Medal } from 'lucide-react';
 import { getVerkopersPrestaties, getFilialenOverzicht } from '@/lib/tracker/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatEuro } from '@/lib/pricing/margin';
 
 export const dynamic = 'force-dynamic';
 
-const MEDAILLE = ['🥇', '🥈', '🥉'];
+// Goud / zilver / brons voor de top-3.
+const MEDAILLE_KLEUR = ['text-amber-500', 'text-slate-400', 'text-amber-700'];
 
 export default async function VerkopersPage() {
   const [prestaties, filialen] = await Promise.all([
@@ -30,8 +32,12 @@ export default async function VerkopersPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="w-6 text-center text-sm text-muted-foreground">
-                      {MEDAILLE[i] ?? i + 1}
+                    <span className="flex w-6 justify-center text-sm text-muted-foreground">
+                      {i < 3 ? (
+                        <Medal className={`h-5 w-5 ${MEDAILLE_KLEUR[i]}`} />
+                      ) : (
+                        i + 1
+                      )}
                     </span>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{v.naam}</p>
