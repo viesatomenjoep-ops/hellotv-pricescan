@@ -246,13 +246,13 @@ export function ScanClient({
               } ${scanning ? 'animate-pulse' : ''}`}
             >
               {scanning ? (
-                <Radio className="h-9 w-9" />
+                <Radio className="h-9 w-9" strokeWidth={1.75} />
               ) : flash === 'ok' ? (
-                <CircleCheck className="h-9 w-9" />
+                <CircleCheck className="h-9 w-9" strokeWidth={1.75} />
               ) : flash === 'error' ? (
-                <TriangleAlert className="h-9 w-9" />
+                <TriangleAlert className="h-9 w-9" strokeWidth={1.75} />
               ) : (
-                <ScanLine className="h-9 w-9" />
+                <ScanLine className="h-9 w-9" strokeWidth={1.75} />
               )}
             </div>
             <p className="text-sm text-muted-foreground">

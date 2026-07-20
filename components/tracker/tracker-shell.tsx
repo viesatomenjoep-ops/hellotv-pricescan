@@ -4,7 +4,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition, type ReactNode } from 'react';
-import { House, Boxes, ScanLine, Lightbulb, Ellipsis, Bell, type LucideIcon } from 'lucide-react';
+import {
+  House,
+  Boxes,
+  ScanLine,
+  Lightbulb,
+  Ellipsis,
+  Bell,
+  LayoutDashboard,
+  Search,
+  TrendingUp,
+  Users,
+  Tv,
+  Store,
+  ListChecks,
+  Calendar,
+  Settings,
+  Plug,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SignOutButton } from '@/components/sign-out-button';
 import { useFlag } from './flags-provider';
@@ -32,39 +50,39 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Overzicht',
     items: [
-      { href: '/tracker', label: 'Dashboard' },
-      { href: '/tracker/zoeken', label: 'Zoeken' },
+      { href: '/tracker', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/tracker/zoeken', label: 'Zoeken', icon: Search },
     ],
   },
   {
     title: 'Verkoop',
     items: [
-      { href: '/tracker/scan', label: 'Scan toestel' },
-      { href: '/tracker/aanbevelingen', label: 'Aanbevelingen' },
-      { href: '/tracker/verkopen', label: 'Verkopen' },
-      { href: '/tracker/verkopers', label: 'Verkopers' },
+      { href: '/tracker/scan', label: 'Scan toestel', icon: ScanLine },
+      { href: '/tracker/aanbevelingen', label: 'Aanbevelingen', icon: Lightbulb },
+      { href: '/tracker/verkopen', label: 'Verkopen', icon: TrendingUp },
+      { href: '/tracker/verkopers', label: 'Verkopers', icon: Users },
     ],
   },
   {
     title: 'Voorraad',
     items: [
-      { href: '/tracker/voorraad', label: 'Voorraad' },
-      { href: '/tracker/toestellen', label: 'Toestellen' },
-      { href: '/tracker/filialen', label: 'Filialen' },
+      { href: '/tracker/voorraad', label: 'Voorraad', icon: Boxes },
+      { href: '/tracker/toestellen', label: 'Toestellen', icon: Tv },
+      { href: '/tracker/filialen', label: 'Filialen', icon: Store },
     ],
   },
   {
     title: 'Planning',
     items: [
-      { href: '/tracker/taken', label: 'Taken' },
-      { href: '/tracker/agenda', label: 'Agenda', flag: 'agenda' },
+      { href: '/tracker/taken', label: 'Taken', icon: ListChecks },
+      { href: '/tracker/agenda', label: 'Agenda', flag: 'agenda', icon: Calendar },
     ],
   },
   {
     title: 'Beheer',
     items: [
-      { href: '/tracker/overig', label: 'Overig' },
-      { href: '/tracker/koppelingen', label: 'Koppelingen', flag: 'overig.koppelingen' },
+      { href: '/tracker/overig', label: 'Overig', icon: Settings },
+      { href: '/tracker/koppelingen', label: 'Koppelingen', flag: 'overig.koppelingen', icon: Plug },
     ],
   },
 ];
@@ -147,18 +165,32 @@ export function TrackerShell({
               <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {s.title}
               </p>
-              {s.items.map((i) => (
-                <Link
-                  key={i.href}
-                  href={i.href}
-                  className={cn(
-                    'block rounded-lg px-3 py-2 text-sm font-medium',
-                    isActive(i.href) ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
-                  )}
-                >
-                  {i.label}
-                </Link>
-              ))}
+              {s.items.map((i) => {
+                const Icon = i.icon;
+                const actief = isActive(i.href);
+                return (
+                  <Link
+                    key={i.href}
+                    href={i.href}
+                    aria-current={actief ? 'page' : undefined}
+                    className={cn(
+                      'relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium',
+                      actief ? 'bg-primary/10 text-foreground' : 'text-muted-foreground hover:bg-muted',
+                    )}
+                  >
+                    {actief && (
+                      <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
+                    )}
+                    {Icon && (
+                      <Icon
+                        className={cn('h-4 w-4 shrink-0', actief ? 'text-foreground' : 'text-muted-foreground')}
+                        strokeWidth={1.75}
+                      />
+                    )}
+                    {i.label}
+                  </Link>
+                );
+              })}
             </div>
           ))}
         </nav>
@@ -180,7 +212,7 @@ export function TrackerShell({
                   className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted"
                   aria-label="Notificaties"
                 >
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-5 w-5" strokeWidth={1.75} />
                   {ongelezen > 0 && (
                     <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                       {ongelezen}
@@ -239,10 +271,12 @@ export function TrackerShell({
         {BOTTOM.map((i) => {
           const center = i.label === 'Scan';
           const Icon = i.icon;
+          const actief = isActive(i.href);
           return (
             <Link
               key={i.href}
               href={i.href}
+              aria-current={actief ? 'page' : undefined}
               className={cn(
                 'flex min-h-12 min-w-[52px] flex-col items-center justify-center gap-0.5 px-3 py-1.5 text-[11px] font-medium',
                 center && '-mt-6',
@@ -250,17 +284,19 @@ export function TrackerShell({
             >
               <span
                 className={cn(
-                  'flex items-center justify-center rounded-full',
+                  'flex items-center justify-center rounded-full transition-colors',
                   center
                     ? 'h-12 w-12 bg-primary text-primary-foreground shadow-lg'
-                    : isActive(i.href)
-                      ? 'text-primary'
-                      : 'text-muted-foreground',
+                    : actief
+                      ? 'h-9 w-9 bg-primary/15 text-foreground'
+                      : 'h-9 w-9 text-muted-foreground',
                 )}
               >
-                {Icon && <Icon className={center ? 'h-6 w-6' : 'h-5 w-5'} strokeWidth={2} />}
+                {Icon && (
+                  <Icon className={center ? 'h-6 w-6' : 'h-5 w-5'} strokeWidth={center ? 2 : 1.75} />
+                )}
               </span>
-              <span className={cn(isActive(i.href) && !center && 'text-foreground')}>
+              <span className={cn(actief && !center ? 'font-semibold text-foreground' : '')}>
                 {i.label}
               </span>
             </Link>
