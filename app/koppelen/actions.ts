@@ -2,6 +2,7 @@
 
 import { epcSchema } from '@/lib/schemas';
 import { getSessionUser } from '@/lib/auth';
+import { bridgeFromPriceScan, unbridge } from '@/lib/rfid/bridge';
 import {
   searchProducts,
   coupleTag,
@@ -38,6 +39,7 @@ export async function coupleAction(
   if (!epc.success) return { ok: false, error: epc.error.issues[0]?.message ?? 'Ongeldige EPC' };
   try {
     await coupleTag(epc.data, productId);
+    await bridgeFromPriceScan(epc.data, productId); // EAN-brug → Tracker
     return { ok: true, data: { epc: epc.data } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Koppelen mislukt' };
@@ -54,6 +56,7 @@ export async function moveAction(
   if (!epc.success) return { ok: false, error: epc.error.issues[0]?.message ?? 'Ongeldige EPC' };
   try {
     await moveTag(epc.data, productId);
+    await bridgeFromPriceScan(epc.data, productId); // EAN-brug → Tracker
     return { ok: true, data: { epc: epc.data } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Verplaatsen mislukt' };
@@ -67,6 +70,7 @@ export async function unlinkAction(rawEpc: string): Promise<ActionResult<{ epc: 
   if (!epc.success) return { ok: false, error: epc.error.issues[0]?.message ?? 'Ongeldige EPC' };
   try {
     await unlinkTag(epc.data);
+    await unbridge(epc.data); // overal ontkoppelen
     return { ok: true, data: { epc: epc.data } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Ontkoppelen mislukt' };

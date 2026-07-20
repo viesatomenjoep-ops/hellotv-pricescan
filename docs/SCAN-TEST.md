@@ -57,7 +57,22 @@ Login per rol (`admin` / `sales` / `warehouse`, wachtwoord `PriceScan!2026`):
 - [ ] Scan een **EAN** die bij een toestel hoort → toestel opent.
 - [ ] "Demo (willekeurig)" werkt nog voor presentaties zonder chips.
 
-## 5. Randgevallen
+## 5. EAN-brug — één chip, overal herkend
+
+De demo-toestellen 1–4 delen hun EAN met PriceScan-producten (seed). Zo werkt de brug:
+
+- [ ] Koppel in **PriceScan `/koppelen`** een verse chip aan product #1 → scan diezelfde chip in de
+      **Tracker** → het bijbehorende toestel opent (gespiegeld via EAN).
+- [ ] Koppel in de **Tracker** een verse chip aan toestel #2 → scan diezelfde chip in **PriceScan
+      `/scan`** → het product verschijnt.
+- [ ] Ontkoppel de chip in één app → hij is in beide apps weg.
+- [ ] Chip op een toestel/product zónder tegenhanger (geen gedeelde EAN) → werkt gewoon in de
+      app waar je hem koppelde; de andere app kent hem niet (verwacht gedrag).
+
+> De brug matcht op EAN. In productie (Vendit) delen product en toestel dezelfde EAN, dus dit werkt
+> automatisch. In de demo alleen voor toestellen 1–4 (seed `BRUG_EANS`).
+
+## 6. Randgevallen
 
 - [ ] Snel meerdere verschillende chips achter elkaar → elke scan pakt het juiste item.
 - [ ] Reader zonder Enter-suffix → scan finaliseert alsnog (idle-timeout).
@@ -65,8 +80,9 @@ Login per rol (`admin` / `sales` / `warehouse`, wachtwoord `PriceScan!2026`):
 
 ## Bekende grenzen
 
-- Tracker en PriceScan hebben **gescheiden** koppelingen: een chip die je in PriceScan aan een
-  *product* hangt, is niet automatisch bekend in de Tracker (`toestel_tags` is apart). Koppel in
-  het scherm waar je hem gebruikt.
+- De EAN-brug spiegelt via de **service-role** op de server; hij is best-effort en faalt stil als
+  er geen tegenhanger met dezelfde EAN bestaat. De primaire koppeling gaat altijd door.
+- PriceScan (`rfid_tags`) en Tracker (`toestel_tags`) blijven aparte tabellen; de brug houdt ze in
+  sync op basis van EAN. Ze delen (nog) geen catalogus.
 - De unit-tests dekken de classificatie/normalisatie (`pnpm test`). Hardware-gedrag (timing,
   suffix) is per reader anders — vandaar `/dev/scan-test`.

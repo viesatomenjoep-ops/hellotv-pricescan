@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { epcSchema } from '@/lib/schemas';
+import { bridgeFromTracker } from '@/lib/rfid/bridge';
 
 // Koppel (of verplaats) een RFID-chip aan een toestel, zodat de Tracker hem herkent bij scannen.
 export async function koppelToestelTagAction(
@@ -17,6 +18,7 @@ export async function koppelToestelTagAction(
     .from('toestel_tags')
     .upsert({ epc, toestel_id: toestelId, status: 'active', linked_at: new Date().toISOString() });
   if (error) return { ok: false, error: error.message };
+  await bridgeFromTracker(epc, toestelId); // EAN-brug → PriceScan
   return { ok: true, epc };
 }
 

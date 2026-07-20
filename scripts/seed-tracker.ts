@@ -422,7 +422,15 @@ const FLAGS = [
 ] as const;
 
 const c = (euro: number) => Math.round(euro * 100);
-const ean = (id: number) => '87' + (100000000 + id * 137171).toString().slice(0, 10);
+// EAN-brug-demo: de eerste toestellen delen hun EAN met PriceScan-producten (SPECS 0..3),
+// zodat één gekoppelde chip in beide apps herkend wordt. Rest krijgt een eigen gegenereerde EAN.
+const BRUG_EANS: Record<number, string> = {
+  1: '8806090000011',
+  2: '8806090000012',
+  3: '8806090000013',
+  4: '8806090000014',
+};
+const ean = (id: number) => BRUG_EANS[id] ?? '87' + (100000000 + id * 137171).toString().slice(0, 10);
 
 async function reset() {
   for (const t of [
@@ -589,14 +597,29 @@ async function main() {
 
   // Voorbeeld-RFID-chips gekoppeld aan de eerste toestellen (voor demo/handmatig testen).
   // Vervang deze door je eigen chip-EPC's zodra je die inscant.
-  await ins(
-    'toestel_tags',
-    TOESTELLEN.slice(0, 4).map((t, i) => ({
-      epc: `E2801170000002000000A0${(i + 1).toString(16).toUpperCase().padStart(2, '0')}`,
-      toestel_id: t.id,
-      status: 'active',
-    })),
-  );
+  const demoChips = TOESTELLEN.slice(0, 4).map((t, i) => ({
+    epc: `E2801170000002000000A0${(i + 1).toString(16).toUpperCase().padStart(2, '0')}`,
+    toestel_id: t.id,
+    status: 'active',
+  }));
+  await ins('toestel_tags', demoChips);
+
+  // EAN-brug: spiegel de demo-chips ook naar PriceScan rfid_tags (via het gedeelde EAN),
+  // zodat dezelfde chip meteen in beide apps herkend wordt. Best-effort — slaat over als er
+  // (nog) geen PriceScan-product met die EAN bestaat.
+  for (const chip of demoChips) {
+    const e = BRUG_EANS[chip.toestel_id];
+    if (!e) continue;
+    const { data: product } = await db.from('products').select('id').eq('ean', e).maybeSingle();
+    if (product) {
+      await db.from('rfid_tags').upsert({
+        epc: chip.epc,
+        product_id: product.id,
+        status: 'active',
+        linked_at: new Date().toISOString(),
+      });
+    }
+  }
 
   await report();
 }
