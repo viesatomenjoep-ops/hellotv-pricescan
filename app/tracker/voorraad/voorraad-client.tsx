@@ -124,7 +124,7 @@ export function VoorraadClient({
               <th className="p-2">Klasse</th>
               <th className="p-2">Voorraad</th>
               <th className="p-2">Marge%</th>
-              <th className="p-2">Ticket</th>
+              <th className="p-2">Ticketprijs</th>
             </tr>
           </thead>
           <tbody>

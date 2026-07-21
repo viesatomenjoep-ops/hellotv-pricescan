@@ -38,7 +38,7 @@ export function TicketEditor({ id, ticketC }: { id: number; ticketC: number }) {
         aria-label="Ticketprijs in euro"
         className="h-10 w-28 md:h-9 md:w-24"
       />
-      <span className="text-xs text-muted-foreground">€ · manager</span>
+      <span className="text-xs text-muted-foreground">€ · via Ticketdashboard</span>
       {pending && <span className="text-xs text-muted-foreground">…</span>}
       {msg && <span className="text-xs text-green-700">{msg}</span>}
     </span>

@@ -20,7 +20,7 @@ export default async function TrackerDashboard() {
     { label: 'Toestellen', value: d.toestellen, icon: Tv, tint: 'bg-blue-100 text-blue-700' },
     { label: 'Voorraad', value: d.voorraadTotaal, icon: Boxes, tint: 'bg-teal-100 text-teal-700' },
     {
-      label: 'Gem. ticket',
+      label: 'Gem. ticketprijs',
       value: formatEuro(d.gemTicketC),
       icon: Tag,
       tint: 'bg-amber-100 text-amber-700',

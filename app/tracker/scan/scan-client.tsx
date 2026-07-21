@@ -576,8 +576,8 @@ export function ScanClient({
               </span>
             </p>
             <p className="text-xs text-muted-foreground">
-              Adviesprijs {formatEuro(adviesPrijs(selected.ticket_c, selected.type_nr))} · ticketprijs{' '}
-              {formatEuro(selected.ticket_c)}
+              Adviesprijs {formatEuro(adviesPrijs(selected.ticket_c, selected.type_nr))} ·
+              Ticketprijs {formatEuro(selected.ticket_c)} (via Ticketdashboard)
             </p>
             {serviceAan && (
               <ul className="grid grid-cols-2 gap-1 pt-2 text-sm">

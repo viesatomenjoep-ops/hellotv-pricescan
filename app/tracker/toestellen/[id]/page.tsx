@@ -68,6 +68,9 @@ export default async function ToestelDetailPage({ params }: { params: { id: stri
             )}
             <Row l="Lifetime-marge">{formatEuro(t.lifetimeMargeC)}</Row>
             <Row l="Verkoopsnelheid">{t.verkoopsnelheid}/10</Row>
+            <p className="pt-1 text-xs text-muted-foreground">
+              Adviesprijs = RRP · ticketprijs = actieprijs via het Ticketdashboard (orderdesk).
+            </p>
           </CardContent>
         </Card>
 
