@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Tv, Boxes, Tag, ListChecks } from 'lucide-react';
 import { getDashboard, getTarget } from '@/lib/tracker/queries';
+import { getSessionUser } from '@/lib/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatEuro } from '@/lib/pricing/margin';
 import { MargeGauge } from '@/components/tracker/marge-gauge';
@@ -14,23 +15,29 @@ function margeTone(pct: number): string {
 }
 
 export default async function TrackerDashboard() {
-  const [d, target] = await Promise.all([getDashboard(), getTarget()]);
+  const [d, target, user] = await Promise.all([getDashboard(), getTarget(), getSessionUser()]);
+  const isManager = user?.role === 'admin';
 
+  // Verkoper ziet clean: alleen 'Toestellen'. Manager ziet de volledige KPI-set + marge-gauge.
   const kpis = [
     { label: 'Toestellen', value: d.toestellen, icon: Tv, tint: 'bg-blue-100 text-blue-700' },
-    { label: 'Voorraad', value: d.voorraadTotaal, icon: Boxes, tint: 'bg-teal-100 text-teal-700' },
-    {
-      label: 'Gem. ticketprijs',
-      value: formatEuro(d.gemTicketC),
-      icon: Tag,
-      tint: 'bg-amber-100 text-amber-700',
-    },
-    {
-      label: 'Open taken',
-      value: d.takenOpen,
-      icon: ListChecks,
-      tint: 'bg-violet-100 text-violet-700',
-    },
+    ...(isManager
+      ? [
+          { label: 'Voorraad', value: d.voorraadTotaal, icon: Boxes, tint: 'bg-teal-100 text-teal-700' },
+          {
+            label: 'Gem. ticketprijs',
+            value: formatEuro(d.gemTicketC),
+            icon: Tag,
+            tint: 'bg-amber-100 text-amber-700',
+          },
+          {
+            label: 'Open taken',
+            value: d.takenOpen,
+            icon: ListChecks,
+            tint: 'bg-violet-100 text-violet-700',
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -42,7 +49,7 @@ export default async function TrackerDashboard() {
 
       <CampagneBanner />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className={isManager ? 'grid grid-cols-2 gap-3 sm:grid-cols-4' : 'grid grid-cols-1 gap-3'}>
         {kpis.map((k) => (
           <Card key={k.label}>
             <CardContent className="flex items-center gap-3 p-4">
@@ -58,7 +65,7 @@ export default async function TrackerDashboard() {
         ))}
       </div>
 
-      <MargeGauge target={target} />
+      {isManager && <MargeGauge target={target} />}
 
       <div>
         <Card>
