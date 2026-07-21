@@ -30,7 +30,7 @@ const SERVICE = [
 ];
 
 function margeTone(pct: number) {
-  return pct >= 25 ? 'text-green-700' : pct >= 15 ? 'text-orange-700' : 'text-red-700';
+  return pct >= 28 ? 'text-green-700' : pct >= 20 ? 'text-orange-700' : 'text-red-700';
 }
 
 const tvMargePct = (ticket_c: number, inkoop_c: number) =>

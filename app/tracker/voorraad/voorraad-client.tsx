@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
+import { Tv, Boxes, TriangleAlert, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -78,15 +79,22 @@ export function VoorraadClient({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { l: 'Modellen', v: kpis.modellen },
-          { l: 'Voorraad', v: kpis.totaal },
-          { l: 'Laag (≤2)', v: kpis.laag },
-          ...(vmsAfwijking ? [{ l: 'Wijkt af VMS', v: kpis.afw }] : []),
+          { l: 'Modellen', v: kpis.modellen, icon: Tv, tint: 'bg-blue-100 text-blue-700' },
+          { l: 'Voorraad', v: kpis.totaal, icon: Boxes, tint: 'bg-teal-100 text-teal-700' },
+          { l: 'Laag (≤2)', v: kpis.laag, icon: TriangleAlert, tint: 'bg-red-100 text-red-700' },
+          ...(vmsAfwijking
+            ? [{ l: 'Wijkt af VMS', v: kpis.afw, icon: RefreshCw, tint: 'bg-amber-100 text-amber-700' }]
+            : []),
         ].map((k) => (
           <Card key={k.l}>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{k.l}</p>
-              <p className="mt-1 text-2xl font-bold">{k.v}</p>
+            <CardContent className="flex items-center gap-3 p-4">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${k.tint}`}>
+                <k.icon className="h-5 w-5" strokeWidth={1.75} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-xs text-muted-foreground">{k.l}</span>
+                <span className="block text-2xl font-bold leading-tight">{k.v}</span>
+              </span>
             </CardContent>
           </Card>
         ))}

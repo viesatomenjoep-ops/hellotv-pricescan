@@ -12,7 +12,7 @@ import { TicketEditor } from './ticket-editor';
 export const dynamic = 'force-dynamic';
 
 function margeTone(pct: number) {
-  return pct >= 25 ? 'text-green-700' : pct >= 15 ? 'text-orange-700' : 'text-red-700';
+  return pct >= 28 ? 'text-green-700' : pct >= 20 ? 'text-orange-700' : 'text-red-700';
 }
 
 export default async function ToestelDetailPage({ params }: { params: { id: string } }) {

@@ -3,22 +3,22 @@ import { cn } from '@/lib/utils';
 
 // Marge-verdict: kleur is het signaal (glanceable). Drempels passen op de demo-data.
 export function margeVerdict(pct: number) {
-  if (pct >= 16)
+  if (pct >= 28)
     return {
       tier: 'hoog' as const,
       paneel: 'bg-green-50 border-green-200',
       ring: 'bg-green-600',
       tekst: 'text-green-800',
-      label: 'Sterke marge',
+      label: 'Topmarge',
       advies: 'Push dit toestel',
     };
-  if (pct >= 12)
+  if (pct >= 20)
     return {
       tier: 'mid' as const,
       paneel: 'bg-amber-50 border-amber-200',
       ring: 'bg-amber-500',
       tekst: 'text-amber-800',
-      label: 'Redelijke marge',
+      label: 'Goede marge',
       advies: 'Prima — of pak een alternatief',
     };
   return {
@@ -33,8 +33,8 @@ export function margeVerdict(pct: number) {
 
 // Trilling-patroon per marge-niveau — voelen zonder kijken.
 export function margeVibratie(pct: number): number[] {
-  if (pct >= 16) return [45]; // één stevige buzz = goed
-  if (pct >= 12) return [20]; // korte buzz = redelijk
+  if (pct >= 28) return [45]; // één stevige buzz = topmarge
+  if (pct >= 20) return [20]; // korte buzz = goed
   return [15, 70, 15]; // twee korte = let op / lage marge
 }
 

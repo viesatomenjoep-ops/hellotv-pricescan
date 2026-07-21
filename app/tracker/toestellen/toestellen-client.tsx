@@ -2,27 +2,44 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatEuro, adviesPrijs } from '@/lib/pricing/margin';
 import { MargeStip } from '@/components/tracker/marge-stip';
+import { MultiSelect } from '@/components/tracker/multi-select';
 import type { ToestelRow } from '@/lib/tracker/queries';
 
 function margeTone(pct: number) {
-  return pct >= 25 ? 'text-green-700' : pct >= 15 ? 'text-orange-700' : 'text-red-700';
+  return pct >= 28 ? 'text-green-700' : pct >= 20 ? 'text-orange-700' : 'text-red-700';
 }
 
 export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
   const [q, setQ] = useState('');
-  const [klasse, setKlasse] = useState<string | null>(null);
-  const [merk, setMerk] = useState<string | null>(null);
+  const [maten, setMaten] = useState<Set<string>>(new Set());
+  const [technieken, setTechnieken] = useState<Set<string>>(new Set());
+  const [merken, setMerken] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<'marge-hoog' | 'marge-laag' | 'model'>('marge-hoog');
 
-  const merken = useMemo(
-    () => Array.from(new Set(toestellen.map((t) => t.merk))).sort(),
+  const maatOpties = useMemo(
+    () =>
+      Array.from(new Set(toestellen.map((t) => t.inch).filter((n): n is number => n != null)))
+        .sort((a, b) => a - b)
+        .map((n) => ({ value: String(n), label: `${n}"` })),
     [toestellen],
   );
-  const klassen = ['OLED', 'QLED', 'Mini-LED', 'LED'];
+  const techOpties = useMemo(
+    () =>
+      Array.from(new Set(toestellen.map((t) => t.klasse).filter((k): k is string => !!k)))
+        .sort()
+        .map((k) => ({ value: k, label: k })),
+    [toestellen],
+  );
+  const merkOpties = useMemo(
+    () =>
+      Array.from(new Set(toestellen.map((t) => t.merk)))
+        .sort()
+        .map((m) => ({ value: m, label: m })),
+    [toestellen],
+  );
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -30,8 +47,9 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
       .filter(
         (t) =>
           (!term || `${t.model} ${t.type_nr} ${t.ean}`.toLowerCase().includes(term)) &&
-          (!klasse || t.klasse === klasse) &&
-          (!merk || t.merk === merk),
+          (maten.size === 0 || (t.inch != null && maten.has(String(t.inch)))) &&
+          (technieken.size === 0 || (t.klasse != null && technieken.has(t.klasse))) &&
+          (merken.size === 0 || merken.has(t.merk)),
       )
       .sort((a, b) =>
         sort === 'model'
@@ -40,7 +58,7 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
             ? a.margePct - b.margePct
             : b.margePct - a.margePct,
       );
-  }, [toestellen, q, klasse, merk, sort]);
+  }, [toestellen, q, maten, technieken, merken, sort]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
@@ -52,28 +70,15 @@ export function ToestellenClient({ toestellen }: { toestellen: ToestelRow[] }) {
         placeholder="Zoek model, typenummer of EAN…"
         className="max-w-md"
       />
-      <div className="flex flex-wrap gap-2">
-        {klassen.map((k) => (
-          <Button
-            key={k}
-            size="sm"
-            variant={klasse === k ? 'default' : 'outline'}
-            onClick={() => setKlasse(klasse === k ? null : k)}
-          >
-            {k}
-          </Button>
-        ))}
-        <span className="mx-1 text-muted-foreground">·</span>
-        {merken.map((m) => (
-          <Button
-            key={m}
-            size="sm"
-            variant={merk === m ? 'default' : 'outline'}
-            onClick={() => setMerk(merk === m ? null : m)}
-          >
-            {m}
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <MultiSelect label="Maat" options={maatOpties} selected={maten} onChange={setMaten} />
+        <MultiSelect
+          label="Techniek"
+          options={techOpties}
+          selected={technieken}
+          onChange={setTechnieken}
+        />
+        <MultiSelect label="Merk" options={merkOpties} selected={merken} onChange={setMerken} />
         <div className="ml-auto flex items-center gap-2">
           <div className="inline-flex rounded-full border p-0.5 text-xs">
             {(
