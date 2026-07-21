@@ -128,15 +128,35 @@ export function ScanClient({
   const onScan = useCallback((scan: Scan) => verwerkScan(scan), [verwerkScan]);
   const { flash } = useScanListener({ enabled: !selected, onScan });
 
-  // Handmatige invoer (typen/plakken van EPC of EAN) — cruciaal om te testen zonder reader.
+  // Live suggesties op typenummer/model terwijl je typt (zonder RFID/barcode).
+  const modelSuggesties = useMemo(() => {
+    const q = handmatig.trim().toLowerCase();
+    if (q.length < 2 || classifyScan(handmatig)) return [];
+    return data.toestellen
+      .filter((t) => `${t.type_nr} ${t.model} ${t.merk}`.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [handmatig, data.toestellen]);
+
+  // Handmatige invoer: EPC/EAN óf een typenummer/model.
   function handmatigZoek() {
     const scan = classifyScan(handmatig);
-    if (!scan) {
-      setScanMsg({ tone: 'error', text: 'Ongeldige code (verwacht EAN-13 of 16–32 hex EPC).' });
+    if (scan) {
+      setHandmatig('');
+      verwerkScan(scan);
       return;
     }
-    setHandmatig('');
-    verwerkScan(scan);
+    // Geen geldige code → probeer op typenummer/model te matchen.
+    const q = handmatig.trim().toLowerCase();
+    const match =
+      data.toestellen.find((t) => t.type_nr.toLowerCase() === q) ??
+      data.toestellen.find((t) => `${t.type_nr} ${t.model}`.toLowerCase().includes(q));
+    if (match) {
+      setHandmatig('');
+      setScanMsg({ tone: 'ok', text: `Gekozen via typenummer: ${match.model}` });
+      kies(match);
+      return;
+    }
+    setScanMsg({ tone: 'error', text: 'Geen code of typenummer herkend.' });
   }
 
   async function koppelPending(toestelId: number) {
@@ -181,20 +201,20 @@ export function ScanClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initieelToestelId]);
 
-  // Demo zonder hardware: pakt een premium topmodel op voorraad (mooi om uit te lichten).
+  // Demo zonder hardware: pakt willekeurig een toestel op voorraad, variabel per merk
+  // (Samsung/LG/TCL/Philips) zodat elke demo-scan een ander model laat zien.
   function demoScan() {
     setScanning(true);
+    const merken = ['Samsung', 'LG', 'TCL', 'Philips'];
     const opVoorraad = data.toestellen.filter((t) => t.voorraadTotaal > 0);
-    // Voorkeur voor OLED/premium met de hoogste ticketprijs; anders duurste op voorraad.
-    const showcase = opVoorraad
-      .filter((t) => t.klasse === 'OLED' || t.ticket_c >= 150000)
-      .sort((a, b) => b.ticket_c - a.ticket_c);
-    const pool = (showcase.length ? showcase : opVoorraad).slice(0, 12);
     setTimeout(() => {
-      const pick = pool[Math.floor(Math.random() * pool.length)] ?? data.toestellen[0];
+      const merk = merken[Math.floor(Math.random() * merken.length)];
+      const pool = opVoorraad.filter((t) => t.merk === merk);
+      const bron = pool.length ? pool : opVoorraad;
+      const pick = bron[Math.floor(Math.random() * bron.length)] ?? data.toestellen[0];
       setScanning(false);
       if (pick) kies(pick);
-    }, 900);
+    }, 800);
   }
 
   const suggesties = useMemo(
@@ -247,22 +267,30 @@ export function ScanClient({
     const withM = (arr: ScanToestel[]) =>
       arr.map((t) => ({ ...t, m: margePctVan(t) })).sort((a, b) => b.m - a.m);
     const anders = data.toestellen.filter((t) => t.id !== selected.id && t.voorraadTotaal > 0);
-    const dezeMaat = withM(anders.filter((t) => inch != null && t.inch === inch)).slice(0, 3);
-    const lo = selected.ticket_c * 0.85;
-    const hi = selected.ticket_c * 1.15;
-    const prijsrange = withM(
-      anders.filter((t) => t.ticket_c >= lo && t.ticket_c <= hi && t.inch !== inch),
-    ).slice(0, 3);
-    const kleinereMaten =
-      inch != null
-        ? Array.from(
-            new Set(anders.map((t) => t.inch).filter((n): n is number => n != null && n < inch)),
-          ).sort((a, b) => b - a)
-        : [];
-    const kleinerMaat = kleinereMaten[0] ?? null;
-    const maatKleiner =
-      kleinerMaat != null ? withM(anders.filter((t) => t.inch === kleinerMaat)).slice(0, 2) : [];
-    return { eigenMarge: margePctVan(selected), dezeMaat, prijsrange, maatKleiner, kleinerMaat };
+    // Uitgaan van dezelfde techniek (klasse). Terugval op alles als er te weinig is.
+    const zelfdeTech = anders.filter((t) => t.klasse === selected.klasse);
+    const pool = zelfdeTech.length >= 3 ? zelfdeTech : anders;
+
+    // Top 3 beste marge (zelfde techniek).
+    const top3 = withM(pool).slice(0, 3);
+
+    // Beste marge per merk (zelfde techniek): per merk het toestel met de hoogste marge.
+    const merken = Array.from(new Set(pool.map((t) => t.merk)));
+    const perMerk = merken
+      .map((merk) => withM(pool.filter((t) => t.merk === merk))[0])
+      .filter((t): t is ScanToestel & { m: number } => Boolean(t))
+      .sort((a, b) => b.m - a.m);
+
+    // Maat kleiner én groter (beste marge, zelfde techniek waar mogelijk).
+    const maten = Array.from(
+      new Set(pool.map((t) => t.inch).filter((n): n is number => n != null)),
+    );
+    const kleinerMaat = inch != null ? maten.filter((n) => n < inch).sort((a, b) => b - a)[0] ?? null : null;
+    const groterMaat = inch != null ? maten.filter((n) => n > inch).sort((a, b) => a - b)[0] ?? null : null;
+    const maatKleiner = kleinerMaat != null ? withM(pool.filter((t) => t.inch === kleinerMaat)).slice(0, 2) : [];
+    const maatGroter = groterMaat != null ? withM(pool.filter((t) => t.inch === groterMaat)).slice(0, 2) : [];
+
+    return { eigenMarge: margePctVan(selected), top3, perMerk, maatKleiner, maatGroter, kleinerMaat, groterMaat };
   }, [selected, data.toestellen]);
 
   function adjust(deltaEuro: number) {
@@ -303,22 +331,46 @@ export function ScanClient({
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Scan een RFID-chip of barcode met de handheld — of voer de code hieronder in.
+              Scan een RFID-chip of barcode — of voer een typenummer / EPC / EAN in.
             </p>
 
-            {/* Handmatige invoer: werkt zonder reader, ideaal om te testen. */}
-            <div className="flex w-full max-w-sm gap-2">
-              <Input
-                value={handmatig}
-                onChange={(e) => setHandmatig(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handmatigZoek()}
-                placeholder="EPC of EAN-13…"
-                className="font-mono"
-                aria-label="EPC of EAN"
-              />
-              <Button onClick={handmatigZoek} disabled={!handmatig.trim()}>
-                Zoek
-              </Button>
+            {/* Handmatige invoer: chip/barcode (EPC/EAN) of typenummer/model. */}
+            <div className="w-full max-w-sm">
+              <div className="flex gap-2">
+                <Input
+                  value={handmatig}
+                  onChange={(e) => setHandmatig(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handmatigZoek()}
+                  placeholder="Typenummer, EPC of EAN…"
+                  aria-label="Typenummer, EPC of EAN"
+                />
+                <Button onClick={handmatigZoek} disabled={!handmatig.trim()}>
+                  Zoek
+                </Button>
+              </div>
+              {modelSuggesties.length > 0 && (
+                <div className="mt-1.5 overflow-hidden rounded-xl border bg-card text-left elev-1">
+                  {modelSuggesties.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        setHandmatig('');
+                        kies(t);
+                      }}
+                      className="flex w-full items-center gap-2 border-b px-3 py-2 last:border-0 hover:bg-muted/50"
+                    >
+                      <MargeStip margePct={tvMargePct(t.ticket_c, t.inkoop_c)} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{t.model}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {t.type_nr} · {t.inch}&quot;
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -466,19 +518,22 @@ export function ScanClient({
         />
       )}
 
-      {/* Slimme alternatieven op marge */}
+      {/* Slimme alternatieven op marge (zelfde techniek) */}
       {!klantView && slim && (
         <div className="space-y-3">
-          <AltStrip titel={`Top marge · ${selected.inch}"`} items={slim.dezeMaat} onPick={kies} />
-          <AltStrip
-            titel="Zelfde prijsklasse · beste marge"
-            items={slim.prijsrange}
-            onPick={kies}
-          />
+          <AltStrip titel={`Top 3 beste marge · ${selected.klasse}`} items={slim.top3} onPick={kies} />
+          <AltStrip titel="Beste marge per merk" items={slim.perMerk} onPick={kies} />
           {slim.kleinerMaat != null && (
             <AltStrip
               titel={`Maat kleiner (${slim.kleinerMaat}") · beste marge`}
               items={slim.maatKleiner}
+              onPick={kies}
+            />
+          )}
+          {slim.groterMaat != null && (
+            <AltStrip
+              titel={`Maat groter (${slim.groterMaat}") · beste marge`}
+              items={slim.maatGroter}
               onPick={kies}
             />
           )}

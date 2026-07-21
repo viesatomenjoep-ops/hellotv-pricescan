@@ -3,11 +3,12 @@ import { AanbevelingenClient } from './aanbevelingen-client';
 
 export const dynamic = 'force-dynamic';
 
-function score(t: { margePct: number; verkoopsnelheid: number; voorraadTotaal: number }) {
-  const marge = (Math.min(Math.max(t.margePct, 0), 40) / 40) * 100;
-  const snelheid = (t.verkoopsnelheid / 10) * 100;
-  const voorraad = (Math.min(t.voorraadTotaal, 20) / 20) * 100;
-  return Math.round(marge * 0.5 + snelheid * 0.3 + voorraad * 0.2);
+// Score wordt gedreven door de marge (hoogste marge = beste score). Bij weinig voorraad (<10)
+// zakt de score, want dan is het model minder makkelijk te verkopen.
+function score(t: { margePct: number; voorraadTotaal: number }) {
+  const margeScore = Math.min(Math.max(t.margePct, 0), 45) * 2; // 45% → 90
+  const voorraadFactor = t.voorraadTotaal >= 10 ? 1 : 0.6 + 0.04 * t.voorraadTotaal; // 0→0.6, 10→1
+  return Math.round(margeScore * voorraadFactor);
 }
 
 export default async function AanbevelingenPage() {
