@@ -1,5 +1,7 @@
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { toestelMarge } from '@/lib/pricing/margin';
 
 // Data-laag Sales Tracker. Bedragen in centen. Afgeleide marges in code (niet opgeslagen).
@@ -35,11 +37,10 @@ export interface Filiaal {
   lng?: number | null;
 }
 
-export async function getToestellenMetVoorraad(): Promise<{
-  toestellen: ToestelRow[];
-  filialen: Filiaal[];
-}> {
-  const supabase = createClient();
+// 30s gecacht (data gelijk voor alle gebruikers); tag 'tracker-catalog' vervalt bij schrijfacties.
+export const getToestellenMetVoorraad = unstable_cache(
+  async (): Promise<{ toestellen: ToestelRow[]; filialen: Filiaal[] }> => {
+  const supabase = createAdminClient();
   const [{ data: toestellen }, { data: voorraad }, { data: filialen }] = await Promise.all([
     supabase.from('toestellen').select('id, merk, model, type_nr, ean, inch, klasse, inkoop_c, ticket_c, min_marge_c, verkoopsnelheid, specs'),
     supabase.from('voorraad').select('toestel_id, filiaal_id, aantal, wijkt_af_vms'),
@@ -78,11 +79,15 @@ export async function getToestellenMetVoorraad(): Promise<{
     };
   });
   return { toestellen: rows, filialen: filialen ?? [] };
-}
+  },
+  ['tracker-toestellen-voorraad'],
+  { revalidate: 30, tags: ['tracker-catalog'] },
+);
 
 // Lichte variant voor de toestellen-lijst: alleen totalen (view) i.p.v. alle voorraadregels.
-export async function getToestellenLijst(): Promise<ToestelRow[]> {
-  const supabase = createClient();
+export const getToestellenLijst = unstable_cache(
+  async (): Promise<ToestelRow[]> => {
+  const supabase = createAdminClient();
   const [{ data: toestellen }, { data: totalen }] = await Promise.all([
     supabase.from('toestellen').select(
       'id, merk, model, type_nr, ean, inch, klasse, inkoop_c, ticket_c, min_marge_c, verkoopsnelheid, specs',
@@ -112,7 +117,10 @@ export async function getToestellenLijst(): Promise<ToestelRow[]> {
       wijktAfVms: false,
     };
   });
-}
+  },
+  ['tracker-toestellen-lijst'],
+  { revalidate: 30, tags: ['tracker-catalog'] },
+);
 
 export interface DashboardData {
   toestellen: number;
@@ -340,8 +348,9 @@ export async function getTarget(): Promise<TargetRow | null> {
   return (data as TargetRow) ?? null;
 }
 
-export async function getDashboard(): Promise<DashboardData> {
-  const supabase = createClient();
+export const getDashboard = unstable_cache(
+  async (): Promise<DashboardData> => {
+  const supabase = createAdminClient();
   const [{ data: toestellen }, { data: voorraad }, { data: taken }] = await Promise.all([
     supabase.from('toestellen').select('id, merk, model, inkoop_c, ticket_c'),
     // Pre-geaggregeerde totalen (view) i.p.v. ~5.700 losse voorraadregels sommeren.
@@ -373,4 +382,7 @@ export async function getDashboard(): Promise<DashboardData> {
     takenOpen: (taken ?? []).filter((t) => t.status !== 'klaar').length,
     besteMarge,
   };
-}
+  },
+  ['tracker-dashboard'],
+  { revalidate: 30, tags: ['tracker-catalog'] },
+);
